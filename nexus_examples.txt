@@ -1,0 +1,32 @@
+example:
+
+master repository contains
+/dir/
+/dir/a.txt
+/dir/subdir/
+/dir/subdir/archive.zip
+                |
+		 -> a.txt                
+                 -> dir/
+                 -> dir/b.txt
+
+
+shadow repository:
+/dir/                    -> master:/dir/
+/dir/a.txt               -> master:/dir/a.txt               
+/dir/subdir/             -> master:/dir/subdir/
+/dir/subdir/archive.zip  -> master:/dir/subdir/archive.zip
+/dir/subdir/archive.zip/ -> collection
+                                |
+		                 -> a.txt                
+                                 -> dir/
+/dir/subdir/archive.zip/a.txt -> extracted content of file a.txt from /dir/subdir/archive.zip
+/dir/subdir/archive.zip/dir   -> collection
+                                     |
+                                      -> b.txt
+/dir/subdir/archive.zip/dir/b.txt -> extracted content of file dir/b.txt from /dir/subdir/archive.zip
+/dir/subdir/archive.zip/x.txt -> NOT FOUND
+/dir/subdir/archive.zip/xDir  -> NOT FOUND
+/x.txt -> NOT FOUND
+/xDir  -> NOT FOUND
+

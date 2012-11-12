@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ - Copyright (c) 2010, 2012 SAP AG and others.
+ - All rights reserved. This program and the accompanying materials
+ - are made available under the terms of the Eclipse Public License v1.0
+ - which accompanies this distribution, and is available at
+ - http://www.eclipse.org/legal/epl-v10.html
+ -
+ - Contributors:
+ -    SAP AG - initial API and implementation
+ -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>org.eclipse.tycho.nexus</groupId>
+	<artifactId>unzip-repository-plugin</artifactId>
+	<version>0.10.0-SNAPSHOT</version>
+
+	<inceptionYear>2010</inceptionYear>
+	<url>http://www.eclipse.org/tycho/</url>
+	<ciManagement>
+		<system>hudson</system>
+		<url>https://hudson.eclipse.org/hudson</url>
+	</ciManagement>
+	<licenses>
+		<license>
+			<name>Eclipse Public License</name>
+			<url>http://www.eclipse.org/legal/epl-v10.html</url>
+		</license>
+	</licenses>
+	<organization>
+		<name>Eclipse Foundation</name>
+		<url>http://www.eclipse.org/</url>
+	</organization>
+	<issueManagement>
+		<system>Bugzilla</system>
+		<url>https://bugs.eclipse.org/bugs/buglist.cgi?product=Tycho</url>
+	</issueManagement>
+
+	<packaging>nexus-plugin</packaging>
+
+	<name>Unzip Repository Nexus Plugin (Incubation)</name>
+	<description>
+	The Unzip Repository is a Nexus repository type that shadows the build results of a standard 
+	Maven 2 repository and allows to browse into zip and jar artifacts. 
+	The use case for Tycho is to to offer p2 repositories that were build with Tycho and deployed 
+	to Nexus as zip so that other Tycho projects can reference them.
+	</description>
+	
+	<properties>
+		<nexus-version>2.0.3</nexus-version>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- plexus-utils are provided by Nexus -> mark as "provided", otherwise they will be
+			   packaged into the plugin archive and this can lead to runtime version mismatches! -->
+			<dependency>
+				<groupId>org.codehaus.plexus</groupId>
+				<artifactId>plexus-utils</artifactId>
+				<version>2.0.5</version>
+				<scope>provided</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.apache.maven</groupId>
+			<artifactId>maven-artifact</artifactId>
+			<version>3.0.4</version>
+		</dependency>
+		<!-- Main plugin API, pulling in what is needed -->
+		<dependency>
+			<groupId>org.sonatype.nexus</groupId>
+			<artifactId>nexus-plugin-api</artifactId>
+			<version>${nexus-version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<!-- This dependency is only needed if you want to include REST Resources -->
+		<dependency>
+			<groupId>org.sonatype.nexus</groupId>
+			<artifactId>nexus-rest-api</artifactId>
+			<version>${nexus-version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- Basic testing -->
+		<dependency>
+			<groupId>org.sonatype.nexus</groupId>
+			<artifactId>nexus-plugin-test-api</artifactId>
+			<version>${nexus-version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.10</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.easymock</groupId>
+			<artifactId>easymock</artifactId>
+			<version>3.1</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<!-- Needed for custom packaging -->
+			<plugin>
+				<groupId>org.sonatype.plugins</groupId>
+				<artifactId>app-lifecycle-maven-plugin</artifactId>
+				<version>1.4</version>
+				<extensions>true</extensions>
+				<dependencies>
+					<dependency>
+						<groupId>org.sonatype.plugins</groupId>
+						<artifactId>app-lifecycle-nexus</artifactId>
+						<version>1.4</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.0.1</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.1</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- Generate components.xml to use Plexus style of dependency injection -->
+			<plugin>
+				<groupId>org.codehaus.plexus</groupId>
+				<artifactId>plexus-component-metadata</artifactId>
+				<version>1.5.5</version>
+				<executions>
+					<execution>
+						<id>process-classes</id>
+						<goals>
+							<goal>generate-metadata</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>process-test-classes</id>
+						<goals>
+							<goal>generate-test-metadata</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+
+	</build>
+
+</project>
