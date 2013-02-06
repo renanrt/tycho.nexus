@@ -10,8 +10,10 @@
  *******************************************************************************/
 package org.eclipse.tycho.nexus.internal.plugin;
 
+import org.sonatype.nexus.plugins.RepositoryType;
 import org.sonatype.nexus.proxy.repository.ShadowRepository;
 
+@RepositoryType(pathPrefix = "unzip")
 public interface UnzipRepository extends ShadowRepository {
 
     boolean isUseVirtualVersion();

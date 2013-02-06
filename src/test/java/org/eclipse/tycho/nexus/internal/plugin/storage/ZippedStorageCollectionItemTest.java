@@ -16,17 +16,15 @@ import java.util.Collection;
 
 import junit.framework.Assert;
 
-import org.codehaus.plexus.logging.console.ConsoleLogger;
 import org.eclipse.tycho.nexus.internal.plugin.DefaultUnzipRepository;
-import org.eclipse.tycho.nexus.internal.plugin.storage.Util;
-import org.eclipse.tycho.nexus.internal.plugin.storage.ZippedItem;
-import org.eclipse.tycho.nexus.internal.plugin.storage.ZippedStorageCollectionItem;
 import org.eclipse.tycho.nexus.internal.plugin.test.RepositoryMock;
 import org.eclipse.tycho.nexus.internal.plugin.test.TestUtil;
 import org.eclipse.tycho.nexus.internal.plugin.test.UnzipRepositoryMock;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.proxy.AccessDeniedException;
 import org.sonatype.nexus.proxy.IllegalOperationException;
 import org.sonatype.nexus.proxy.ItemNotFoundException;
@@ -37,6 +35,8 @@ import org.sonatype.nexus.proxy.item.StorageItem;
 public class ZippedStorageCollectionItemTest {
     private DefaultUnzipRepository unzipRepositoryMock;
 
+    protected Logger testLogger = LoggerFactory.getLogger(getClass());
+
     @Before
     public void setupRepo() {
         unzipRepositoryMock = UnzipRepositoryMock.createUnzipRepository(RepositoryMock.createMasterRepo());
@@ -46,7 +46,7 @@ public class ZippedStorageCollectionItemTest {
     public void testList() throws ItemNotFoundException, IOException, AccessDeniedException,
             NoSuchResourceStoreException, IllegalOperationException {
         final ZippedItem zippedItem = new ZippedItem(unzipRepositoryMock, "/dir/subdir/archive.zip", "dir", 0L,
-                new ConsoleLogger());
+                testLogger);
         final ZippedStorageCollectionItem zippedStorageCollectionItem = new ZippedStorageCollectionItem(zippedItem);
         TestUtil.assertMembers(new String[] { "/dir/subdir/archive.zip" + Util.UNZIP_TYPE_EXTENSION + "/dir/subdir" },
                 new String[] { "/dir/subdir/archive.zip" + Util.UNZIP_TYPE_EXTENSION + "/dir/test.txt" },
@@ -56,8 +56,7 @@ public class ZippedStorageCollectionItemTest {
     @Test
     public void testListInRoot() throws ItemNotFoundException, IOException, AccessDeniedException,
             NoSuchResourceStoreException, IllegalOperationException {
-        final ZippedItem zippedItem = new ZippedItem(unzipRepositoryMock, "/dir/subdir/archive.zip", "", 0L,
-                new ConsoleLogger());
+        final ZippedItem zippedItem = new ZippedItem(unzipRepositoryMock, "/dir/subdir/archive.zip", "", 0L, testLogger);
         final ZippedStorageCollectionItem zippedStorageCollectionItem = new ZippedStorageCollectionItem(zippedItem);
         TestUtil.assertMembers(new String[] { "/dir/subdir/archive.zip" + Util.UNZIP_TYPE_EXTENSION + "/dir" },
                 new String[] { "/dir/subdir/archive.zip" + Util.UNZIP_TYPE_EXTENSION + "/test.txt" },
@@ -70,8 +69,7 @@ public class ZippedStorageCollectionItemTest {
         final File file = new File("./src/test/resources/" + "masterRepo" + "/dir/subdir/archive.zip");
         final long time = file.lastModified();
 
-        final ZippedItem zipItem = new ZippedItem(unzipRepositoryMock, "/dir/subdir/archive.zip", "", time,
-                new ConsoleLogger());
+        final ZippedItem zipItem = new ZippedItem(unzipRepositoryMock, "/dir/subdir/archive.zip", "", time, testLogger);
         final ZippedStorageCollectionItem zipStorageCollectionItem = new ZippedStorageCollectionItem(zipItem);
         Assert.assertEquals(time, zipStorageCollectionItem.getModified());
 

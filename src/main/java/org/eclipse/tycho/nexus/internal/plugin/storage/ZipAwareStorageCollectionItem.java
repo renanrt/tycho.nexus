@@ -13,10 +13,10 @@ package org.eclipse.tycho.nexus.internal.plugin.storage;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import org.codehaus.plexus.logging.Logger;
 import org.eclipse.tycho.nexus.internal.plugin.DefaultUnzipRepository;
 import org.eclipse.tycho.nexus.internal.plugin.cache.ConversionResult;
 import org.eclipse.tycho.nexus.internal.plugin.cache.RequestPathConverter;
+import org.slf4j.Logger;
 import org.sonatype.nexus.proxy.AccessDeniedException;
 import org.sonatype.nexus.proxy.IllegalOperationException;
 import org.sonatype.nexus.proxy.ItemNotFoundException;

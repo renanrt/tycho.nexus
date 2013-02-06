@@ -12,7 +12,6 @@ package org.eclipse.tycho.nexus.internal.plugin.test;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 
 import org.codehaus.plexus.util.FileUtils;
 import org.sonatype.nexus.mime.DefaultMimeSupport;
@@ -28,8 +27,7 @@ public class FSLocalRepositoryStorageMock extends DefaultFSLocalRepositoryStorag
     private final File baseDir = FileUtils.createTempFile("nexus-unzip" + File.separator, "test-storage", null);
 
     public FSLocalRepositoryStorageMock() {
-        super(new DefaultWastebasket(), new DefaultLinkPersister(), new DefaultMimeSupport(),
-                new HashMap<String, Long>(), new DefaultFSPeer());
+        super(new DefaultWastebasket(), new DefaultLinkPersister(), new DefaultMimeSupport(), new DefaultFSPeer());
 
         if (baseDir.exists()) {
             try {

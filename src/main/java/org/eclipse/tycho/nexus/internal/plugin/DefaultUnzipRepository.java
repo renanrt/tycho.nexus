@@ -25,7 +25,6 @@ import org.eclipse.tycho.nexus.internal.plugin.storage.ZippedItem;
 import org.sonatype.nexus.configuration.Configurator;
 import org.sonatype.nexus.configuration.model.CRepository;
 import org.sonatype.nexus.configuration.model.CRepositoryExternalConfigurationHolderFactory;
-import org.sonatype.nexus.plugins.RepositoryType;
 import org.sonatype.nexus.proxy.IllegalOperationException;
 import org.sonatype.nexus.proxy.ItemNotFoundException;
 import org.sonatype.nexus.proxy.LocalStorageException;
@@ -47,7 +46,8 @@ import org.sonatype.nexus.proxy.repository.ShadowRepository;
 import org.sonatype.nexus.proxy.storage.UnsupportedStorageOperationException;
 import org.sonatype.nexus.proxy.storage.local.LocalRepositoryStorage;
 import org.sonatype.nexus.proxy.storage.local.fs.DefaultFSLocalRepositoryStorage;
-import org.sonatype.plexus.appevents.Event;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * Shadow repository that allows to directly browse and access the content of archive files (e.g.
@@ -70,7 +70,6 @@ import org.sonatype.plexus.appevents.Event;
  * Nexus 1.6 an exception will be logged during startup, but the plugin still works functional
  * correct.
  */
-@RepositoryType(pathPrefix = "unzip")
 @Component(role = UnzipRepository.class, hint = DefaultUnzipRepository.REPOSITORY_HINT, instantiationStrategy = "per-lookup", description = "Unzip Repository")
 public class DefaultUnzipRepository extends AbstractShadowRepository implements UnzipRepository {
     static final String REPOSITORY_HINT = "org.eclipse.tycho.nexus.plugin.DefaultUnzipRepository";
@@ -185,25 +184,23 @@ public class DefaultUnzipRepository extends AbstractShadowRepository implements 
         }
     }
 
-    // see comment at setMasterRepositoryId(String id)
-    @SuppressWarnings("deprecation")
-    @Override
-    public void onEvent(final Event<?> evt) {
-        if (evt instanceof RepositoryRegistryEventAdd) {
-            final RepositoryRegistryEventAdd repoAddEvent = (RepositoryRegistryEventAdd) evt;
-            if (repoAddEvent.getRepository().getId().equals(getMasterRepositoryId())) {
-                try {
-                    setMasterRepositoryId(repoAddEvent.getRepository().getId());
-                } catch (final NoSuchRepositoryException e) {
-                    getLogger().warn("Master Repository not available", e);
-                } catch (final IncompatibleMasterRepositoryException e) {
-                    getLogger().warn("Master Repository incompatible", e);
-                }
+    @Subscribe
+    public void onNexusStartedEvent(NexusStartedEvent evt) {
+        isNexusStarted = true;
+    }
+
+    @Subscribe
+    public void onRepositoryRegistryEventAdd(RepositoryRegistryEventAdd evt) {
+        final RepositoryRegistryEventAdd repoAddEvent = (RepositoryRegistryEventAdd) evt;
+        if (repoAddEvent.getRepository().getId().equals(getMasterRepositoryId())) {
+            try {
+                setMasterRepositoryId(repoAddEvent.getRepository().getId());
+            } catch (final NoSuchRepositoryException e) {
+                getLogger().warn("Master Repository not available", e);
+            } catch (final IncompatibleMasterRepositoryException e) {
+                getLogger().warn("Master Repository incompatible", e);
             }
-        } else if (evt instanceof NexusStartedEvent) {
-            isNexusStarted = true;
         }
-        super.onEvent(evt);
     }
 
     /**

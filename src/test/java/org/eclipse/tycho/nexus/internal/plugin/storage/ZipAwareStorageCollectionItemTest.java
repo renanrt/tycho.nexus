@@ -14,16 +14,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import org.codehaus.plexus.logging.console.ConsoleLogger;
 import org.eclipse.tycho.nexus.internal.plugin.DefaultUnzipRepository;
-import org.eclipse.tycho.nexus.internal.plugin.storage.Util;
-import org.eclipse.tycho.nexus.internal.plugin.storage.ZipAwareStorageCollectionItem;
 import org.eclipse.tycho.nexus.internal.plugin.test.RepositoryMock;
 import org.eclipse.tycho.nexus.internal.plugin.test.TestUtil;
 import org.eclipse.tycho.nexus.internal.plugin.test.UnzipRepositoryMock;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.proxy.AccessDeniedException;
 import org.sonatype.nexus.proxy.IllegalOperationException;
 import org.sonatype.nexus.proxy.ItemNotFoundException;
@@ -34,6 +33,8 @@ import org.sonatype.nexus.proxy.item.StorageItem;
 @SuppressWarnings("nls")
 public class ZipAwareStorageCollectionItemTest {
 
+    protected Logger testLogger = LoggerFactory.getLogger(getClass());
+
     @Test
     public void testListWithArchiveMember() throws ItemNotFoundException, IOException, AccessDeniedException,
             NoSuchResourceStoreException, IllegalOperationException {
@@ -42,7 +43,7 @@ public class ZipAwareStorageCollectionItemTest {
         final StorageCollectionItem collectionStorageItem = (StorageCollectionItem) masterRepository
                 .createStorageItem("/dir/subdir");
         final ZipAwareStorageCollectionItem zipAwareStorageCollectionItem = new ZipAwareStorageCollectionItem(
-                unzipRepositoryMock, collectionStorageItem, new ConsoleLogger());
+                unzipRepositoryMock, collectionStorageItem, testLogger);
         TestUtil.assertMembers( //
                 new String[] { "/dir/subdir/archive.zip" + Util.UNZIP_TYPE_EXTENSION, //
                         "/dir/subdir/archive2.zip" + Util.UNZIP_TYPE_EXTENSION },//
@@ -57,7 +58,7 @@ public class ZipAwareStorageCollectionItemTest {
         final StorageCollectionItem collectionStorageItem = (StorageCollectionItem) masterRepository
                 .createStorageItem("/ga/1.0.0-SNAPSHOT");
         final ZipAwareStorageCollectionItem zipAwareStorageCollectionItem = new ZipAwareStorageCollectionItem(
-                unzipRepositoryMock, collectionStorageItem, new ConsoleLogger());
+                unzipRepositoryMock, collectionStorageItem, testLogger);
         TestUtil.assertMembers(new String[] {
                 "/ga/1.0.0-SNAPSHOT/archive-1.0.0-SNAPSHOT-juhu.zip" + Util.UNZIP_TYPE_EXTENSION,
                 "/ga/1.0.0-SNAPSHOT/archive-1.0.0-SNAPSHOT.zip" + Util.UNZIP_TYPE_EXTENSION }, new String[0],
@@ -73,7 +74,7 @@ public class ZipAwareStorageCollectionItemTest {
         final StorageCollectionItem collectionStorageItem = (StorageCollectionItem) masterRepository
                 .createStorageItem("/dir/subdir");
         final ZipAwareStorageCollectionItem zipAwareStorageCollectionItem = new ZipAwareStorageCollectionItem(
-                unzipRepositoryMock, collectionStorageItem, new ConsoleLogger());
+                unzipRepositoryMock, collectionStorageItem, testLogger);
         final ArrayList<StorageItem> items = new ArrayList<StorageItem>(zipAwareStorageCollectionItem.list());
         System.out.println(items.get(0).getPath());
         System.out.println(items.get(0).getModified());
@@ -92,7 +93,7 @@ public class ZipAwareStorageCollectionItemTest {
         final StorageCollectionItem collectionStorageItem = (StorageCollectionItem) masterRepository
                 .createStorageItem("/dir");
         final ZipAwareStorageCollectionItem zipAwareStorageCollectionItem = new ZipAwareStorageCollectionItem(
-                unzipRepositoryMock, collectionStorageItem, new ConsoleLogger());
+                unzipRepositoryMock, collectionStorageItem, testLogger);
         TestUtil.assertMembers(new String[] { "/dir/subdir" }, new String[0], zipAwareStorageCollectionItem.list());
     }
 

@@ -12,10 +12,6 @@ package org.eclipse.tycho.nexus.internal.plugin;
 
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
-import org.sonatype.nexus.plugins.RepositoryType;
-import org.sonatype.nexus.proxy.registry.RepositoryTypeDescriptor;
 import org.sonatype.nexus.proxy.registry.RepositoryTypeRegistry;
 import org.sonatype.nexus.templates.TemplateProvider;
 import org.sonatype.nexus.templates.TemplateSet;
@@ -23,7 +19,7 @@ import org.sonatype.nexus.templates.repository.AbstractRepositoryTemplateProvide
 
 // Alike org.sonatype.nexus.templates.repository.DefaultRepositoryTemplateProvider
 @Component(role = TemplateProvider.class, hint = "unzipRepo-templates")
-public class UnzipRepositoryTemplateProvider extends AbstractRepositoryTemplateProvider implements Initializable {
+public class UnzipRepositoryTemplateProvider extends AbstractRepositoryTemplateProvider {
 
     private static final String UNZIP_REPOSITORY_PREFIX = "unzip";
 
@@ -39,12 +35,5 @@ public class UnzipRepositoryTemplateProvider extends AbstractRepositoryTemplateP
         templates.add(new UnzipRepositoryTemplate(this, templateId, templateDescription));
 
         return templates;
-    }
-
-    @Override
-    public void initialize() throws InitializationException {
-        final RepositoryTypeDescriptor descriptor = new RepositoryTypeDescriptor(UnzipRepository.class,
-                DefaultUnzipRepository.REPOSITORY_HINT, UNZIP_REPOSITORY_PREFIX, RepositoryType.UNLIMITED_INSTANCES);
-        repositoryTypeRegistry.registerRepositoryTypeDescriptors(descriptor);
     }
 }

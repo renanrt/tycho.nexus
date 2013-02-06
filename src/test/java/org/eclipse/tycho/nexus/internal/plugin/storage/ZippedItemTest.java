@@ -12,16 +12,14 @@ package org.eclipse.tycho.nexus.internal.plugin.storage;
 
 import java.io.IOException;
 
-import org.codehaus.plexus.logging.console.ConsoleLogger;
 import org.eclipse.tycho.nexus.internal.plugin.DefaultUnzipRepository;
-import org.eclipse.tycho.nexus.internal.plugin.storage.Util;
-import org.eclipse.tycho.nexus.internal.plugin.storage.ZippedItem;
 import org.eclipse.tycho.nexus.internal.plugin.test.RepositoryMock;
 import org.eclipse.tycho.nexus.internal.plugin.test.TestUtil;
 import org.eclipse.tycho.nexus.internal.plugin.test.UnzipRepositoryMock;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.proxy.ItemNotFoundException;
 import org.sonatype.nexus.proxy.LocalStorageException;
 import org.sonatype.nexus.proxy.item.DefaultStorageCollectionItem;
@@ -141,7 +139,7 @@ public class ZippedItemTest {
     @Test(expected = LocalStorageException.class)
     public void testZipItemNotFound() throws Exception {
         final String pathInZip = "test.txt";
-        new ZippedItem(unzipReposMock, "/", pathInZip, 0L, new ConsoleLogger());
+        new ZippedItem(unzipReposMock, "/", pathInZip, 0L, LoggerFactory.getLogger(getClass()));
     }
 
     @Test
@@ -170,7 +168,8 @@ public class ZippedItemTest {
     }
 
     private ZippedItem createZippedItem(final String pathInZip) throws LocalStorageException, ItemNotFoundException {
-        return new ZippedItem(unzipReposMock, pathToArchive, pathInZip, System.currentTimeMillis(), new ConsoleLogger());
+        return new ZippedItem(unzipReposMock, pathToArchive, pathInZip, System.currentTimeMillis(),
+                LoggerFactory.getLogger(getClass()));
     }
 
     @AfterClass

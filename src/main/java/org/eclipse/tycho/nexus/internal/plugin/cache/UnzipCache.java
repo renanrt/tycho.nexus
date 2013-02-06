@@ -14,9 +14,9 @@ import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.codehaus.plexus.logging.Logger;
 import org.eclipse.tycho.nexus.internal.plugin.DefaultUnzipRepository;
 import org.eclipse.tycho.nexus.internal.plugin.cache.PathLock.PathLockMonitor;
+import org.slf4j.Logger;
 import org.sonatype.nexus.proxy.AccessDeniedException;
 import org.sonatype.nexus.proxy.IllegalOperationException;
 import org.sonatype.nexus.proxy.ItemNotFoundException;

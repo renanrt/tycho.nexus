@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.codehaus.plexus.logging.Logger;
 import org.eclipse.tycho.nexus.internal.plugin.DefaultUnzipRepository;
+import org.slf4j.Logger;
 import org.sonatype.nexus.proxy.ItemNotFoundException;
 import org.sonatype.nexus.proxy.LocalStorageException;
 import org.sonatype.nexus.proxy.ResourceStoreRequest;
