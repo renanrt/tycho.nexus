@@ -134,7 +134,7 @@ public class UnzipCache {
         }
     }
 
-    private String getRequestPathParent(final String path) {
+    private static String getRequestPathParent(final String path) {
         return ItemPathUtils.getParentPath(path) + ItemPathUtils.PATH_SEPARATOR;
     }
 

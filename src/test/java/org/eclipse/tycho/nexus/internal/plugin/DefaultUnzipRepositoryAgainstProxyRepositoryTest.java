@@ -27,7 +27,6 @@ import org.eclipse.tycho.nexus.internal.plugin.test.RepositoryMock;
  * Because of this this test does not include any test cases that directly request a collection (in
  * opposite to {@link DefaultUnzipRepositoryAgainstHostedRepositoryTest}).
  */
-@SuppressWarnings("nls")
 public class DefaultUnzipRepositoryAgainstProxyRepositoryTest extends DefaultUnzipRepositoryTest {
 
     @Override

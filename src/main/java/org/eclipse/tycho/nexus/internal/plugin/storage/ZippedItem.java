@@ -95,7 +95,7 @@ public class ZippedItem {
         zippedStorageItem = createZippedStorageItem();
     }
 
-    private String removeTrailingSlash(final String path) {
+    private static String removeTrailingSlash(final String path) {
         return (path.endsWith("/") ? path.substring(0, path.length() - 1) : path);
     }
 

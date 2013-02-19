@@ -11,8 +11,6 @@
 package org.eclipse.tycho.nexus.internal.plugin;
 
 import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
-import org.sonatype.nexus.proxy.registry.RepositoryTypeRegistry;
 import org.sonatype.nexus.templates.TemplateProvider;
 import org.sonatype.nexus.templates.TemplateSet;
 import org.sonatype.nexus.templates.repository.AbstractRepositoryTemplateProvider;
@@ -20,11 +18,6 @@ import org.sonatype.nexus.templates.repository.AbstractRepositoryTemplateProvide
 // Alike org.sonatype.nexus.templates.repository.DefaultRepositoryTemplateProvider
 @Component(role = TemplateProvider.class, hint = "unzipRepo-templates")
 public class UnzipRepositoryTemplateProvider extends AbstractRepositoryTemplateProvider {
-
-    private static final String UNZIP_REPOSITORY_PREFIX = "unzip";
-
-    @Requirement
-    private RepositoryTypeRegistry repositoryTypeRegistry;
 
     @Override
     public TemplateSet getTemplates() {

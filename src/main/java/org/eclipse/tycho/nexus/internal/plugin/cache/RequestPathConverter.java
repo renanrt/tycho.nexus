@@ -56,8 +56,7 @@ public class RequestPathConverter {
         return parsedRequest.resolve(repository);
     }
 
-    private static ParsedRequest parseRequest(final ResourceStoreRequest request, final boolean useVirtualVersions)
-            throws IllegalRequestException {
+    private static ParsedRequest parseRequest(final ResourceStoreRequest request, final boolean useVirtualVersions) {
         final String requestPath = request.getRequestPath();
 
         if (useVirtualVersions) {
@@ -97,7 +96,7 @@ public class RequestPathConverter {
         return new UnchangedRequest(requestPath);
     }
 
-    private static VersionRange parseVersionRange(final ResourceStoreRequest request) throws IllegalRequestException {
+    private static VersionRange parseVersionRange(final ResourceStoreRequest request) {
         // TODO: create versionRange form requestUrl. 
         return null;
     }

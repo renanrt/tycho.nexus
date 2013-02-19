@@ -244,7 +244,7 @@ public class RequestPathConverterTest {
      * @throws IOException
      * @throws ItemNotFoundException
      */
-    private void assertPathConversion(final String snapshotVersion, final String timestampVersion,
+    private static void assertPathConversion(final String snapshotVersion, final String timestampVersion,
             final String pathInZip, final String classifier) throws Exception {
         String appliedClassifier = "";
         if (classifier.length() > 0) {
@@ -278,13 +278,13 @@ public class RequestPathConverterTest {
      *            empty a leading slash is needed.
      * @throws Exception
      */
-    private void assertPathConversion(final String snapshotVersion, final String timestampVersion,
+    private static void assertPathConversion(final String snapshotVersion, final String timestampVersion,
             final String pathInZip) throws Exception {
         assertPathConversion(snapshotVersion, timestampVersion, pathInZip, "");
     }
 
     @SuppressWarnings("unchecked")
-    private MavenRepository createRepositoryMock(final String pathToArtifact, final String pathToTestMetadata) {
+    private static MavenRepository createRepositoryMock(final String pathToArtifact, final String pathToTestMetadata) {
         final String pathToMetadataXML = pathToArtifact + "maven-metadata.xml";
         final MavenRepository repositoryMock = EasyMock.createMock(MavenRepository.class);
         final Capture<ResourceStoreRequest>[] captures = new Capture[] { new Capture<ResourceStoreRequest>() };
@@ -314,7 +314,7 @@ public class RequestPathConverterTest {
         return repositoryMock;
     }
 
-    private MavenRepository createRepositoryMockNotFindingMetaData(final String pathToArtifact) {
+    private static MavenRepository createRepositoryMockNotFindingMetaData(final String pathToArtifact) {
         final String pathToMetadataXML = pathToArtifact + "maven-metadata.xml";
         final MavenRepository repositoryMock = EasyMock.createMock(MavenRepository.class);
         try {

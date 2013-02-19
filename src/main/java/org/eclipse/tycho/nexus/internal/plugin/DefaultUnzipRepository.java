@@ -191,10 +191,9 @@ public class DefaultUnzipRepository extends AbstractShadowRepository implements 
 
     @Subscribe
     public void onRepositoryRegistryEventAdd(RepositoryRegistryEventAdd evt) {
-        final RepositoryRegistryEventAdd repoAddEvent = (RepositoryRegistryEventAdd) evt;
-        if (repoAddEvent.getRepository().getId().equals(getMasterRepositoryId())) {
+        if (evt.getRepository().getId().equals(getMasterRepository().getId())) {
             try {
-                setMasterRepositoryId(repoAddEvent.getRepository().getId());
+                setMasterRepositoryId(evt.getRepository().getId());
             } catch (final NoSuchRepositoryException e) {
                 getLogger().warn("Master Repository not available", e);
             } catch (final IncompatibleMasterRepositoryException e) {

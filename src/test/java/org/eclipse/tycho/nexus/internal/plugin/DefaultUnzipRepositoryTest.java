@@ -17,8 +17,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.util.Collection;
 
-import org.eclipse.tycho.nexus.internal.plugin.DefaultUnzipRepository;
-import org.eclipse.tycho.nexus.internal.plugin.UnzipRepository;
 import org.eclipse.tycho.nexus.internal.plugin.storage.Util;
 import org.eclipse.tycho.nexus.internal.plugin.storage.ZippedStorageCollectionItem;
 import org.eclipse.tycho.nexus.internal.plugin.test.RepositoryMock;
@@ -41,7 +39,6 @@ import org.sonatype.nexus.proxy.repository.ShadowRepository;
 import org.sonatype.nexus.proxy.storage.UnsupportedStorageOperationException;
 import org.sonatype.nexus.util.ItemPathUtils;
 
-@SuppressWarnings("nls")
 public abstract class DefaultUnzipRepositoryTest {
     protected final RepositoryMock repositoryMock;
     protected final DefaultUnzipRepository unzipRepo;

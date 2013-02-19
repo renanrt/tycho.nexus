@@ -136,6 +136,7 @@ public class ZippedItemTest {
                 zippedStorageItem.getPath());
     }
 
+    @SuppressWarnings("unused")
     @Test(expected = LocalStorageException.class)
     public void testZipItemNotFound() throws Exception {
         final String pathInZip = "test.txt";

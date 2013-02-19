@@ -31,7 +31,6 @@ import org.sonatype.nexus.util.ItemPathUtils;
 /**
  * Tests the DefaultUnzipRepository with a hosted repository as master repository.
  */
-@SuppressWarnings("nls")
 public class DefaultUnzipRepositoryAgainstHostedRepositoryTest extends DefaultUnzipRepositoryTest {
 
     @Override

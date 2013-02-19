@@ -90,7 +90,7 @@ abstract class ParsedRequest {
     }
 
     @SuppressWarnings("deprecation")
-    private String getLatestVersion(final Versioning versioning, final boolean findSnapshots)
+    private static String getLatestVersion(final Versioning versioning, final boolean findSnapshots)
             throws ItemNotFoundException {
         final List<ArtifactVersion> artifactVersions = new ArrayList<ArtifactVersion>();
         for (final String version : versioning.getVersions()) {
