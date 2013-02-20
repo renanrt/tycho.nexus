@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
- - Copyright (c) 2010, 2012 SAP AG and others.
+ - Copyright (c) 2010, 2013 SAP AG and others.
  - All rights reserved. This program and the accompanying materials
  - are made available under the terms of the Eclipse Public License v1.0
  - which accompanies this distribution, and is available at
@@ -19,6 +19,11 @@
 
 	<inceptionYear>2010</inceptionYear>
 	<url>http://www.eclipse.org/tycho/</url>
+	<scm>
+		<url>http://git.eclipse.org/c/tycho/org.eclipse.tycho.nexus.git/</url>
+		<connection>scm:git:http://git.eclipse.org/gitroot/tycho/org.eclipse.tycho.nexus.git</connection>
+		<developerConnection>scm:git:ssh://git.eclipse.org/gitroot/tycho/org.eclipse.tycho.nexus.git</developerConnection>
+	</scm>
 	<ciManagement>
 		<system>hudson</system>
 		<url>https://hudson.eclipse.org/hudson</url>
@@ -33,9 +38,26 @@
 		<name>Eclipse Foundation</name>
 		<url>http://www.eclipse.org/</url>
 	</organization>
+	<developers>
+		<developer>
+			<name>Igor Fedorenko</name>
+			<organization>Sonatype</organization>
+			<organizationUrl>http://www.sonatype.com</organizationUrl>
+		</developer>
+		<developer>
+			<name>Tobias Oberlies</name>
+			<organization>SAP</organization>
+			<organizationUrl>http://www.sap.com</organizationUrl>
+		</developer>
+		<developer>
+			<name>Jan Sievers</name>
+			<organization>SAP</organization>
+			<organizationUrl>http://www.sap.com</organizationUrl>
+		</developer>
+	</developers>
 	<issueManagement>
 		<system>Bugzilla</system>
-		<url>https://bugs.eclipse.org/bugs/buglist.cgi?product=Tycho</url>
+		<url>https://bugs.eclipse.org/bugs/buglist.cgi?product=Tycho&amp;component=Nexus%20Plugins</url>
 	</issueManagement>
 
 	<packaging>nexus-plugin</packaging>
@@ -54,16 +76,67 @@
 
 	<repositories>
 		<repository>
-		  <id>repository.sonatype.org</id>
-		  <url>https://repository.sonatype.org/content/groups/forge/</url>
+			<id>repository.sonatype.org</id>
+			<url>https://repository.sonatype.org/content/groups/forge/</url>
 		</repository>
 	</repositories>
 	<pluginRepositories>
 		<pluginRepository>
-		  <id>repository.sonatype.org</id>
-		  <url>https://repository.sonatype.org/content/groups/forge/</url>
+			<id>repository.sonatype.org</id>
+			<url>https://repository.sonatype.org/content/groups/forge/</url>
 		</pluginRepository>
 	</pluginRepositories>
+
+	<profiles>
+		<profile>
+			<id>release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<version>2.2.1</version>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>jar-no-fork</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<!-- see https://docs.sonatype.org/display/Repository/How+To+Generate+PGP+Signatures+With+Maven -->
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.4</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>2.9</version>
+						<executions>
+							<execution>
+								<id>javadoc-jar</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
   
 	<dependencyManagement>
 		<dependencies>
