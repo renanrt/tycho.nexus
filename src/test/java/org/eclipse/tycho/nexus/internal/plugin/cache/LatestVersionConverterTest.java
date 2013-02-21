@@ -137,10 +137,12 @@ public class LatestVersionConverterTest {
             EasyMock.expect(repositoryMock.getId()).andStubReturn("");
             EasyMock.expect(repositoryMock.retrieveItem(EasyMock.capture(captures[0])))
                     .andAnswer(new IAnswer<StorageFileItem>() {
+                        @Override
                         public StorageFileItem answer() throws Throwable {
                             final StorageFileItem mavenMetaDataXml = EasyMock.createMock(StorageFileItem.class);
                             EasyMock.expect(mavenMetaDataXml.getInputStream()).andAnswer(new IAnswer<InputStream>() {
 
+                                @Override
                                 public InputStream answer() throws Throwable {
                                     final File metaDataFile;
                                     final String requestPath = captures[0].getValue().getRequestPath();

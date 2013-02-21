@@ -48,6 +48,7 @@ public class UnzipRepositoryTemplate extends AbstractRepositoryTemplate {
         final CRepositoryCoreConfiguration result = new CRepositoryCoreConfiguration(getTemplateProvider()
                 .getApplicationConfiguration(), repo,
                 new CRepositoryExternalConfigurationHolderFactory<UnzipRepositoryConfiguration>() {
+                    @Override
                     public UnzipRepositoryConfiguration createExternalConfigurationHolder(final CRepository config) {
                         return new UnzipRepositoryConfiguration((Xpp3Dom) config.getExternalConfiguration());
                     }

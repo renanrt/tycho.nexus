@@ -29,14 +29,17 @@ public final class ZippedStorageFileItem extends DefaultStorageFileItem {
             this.zippedItem = zippedItem;
         }
 
+        @Override
         public InputStream getContent() throws IOException {
             return zippedItem.getStreamOfZippedFile();
         }
 
+        @Override
         public String getMimeType() {
             return zippedItem.getMimeType();
         }
 
+        @Override
         public boolean isReusable() {
             return false;
         }
