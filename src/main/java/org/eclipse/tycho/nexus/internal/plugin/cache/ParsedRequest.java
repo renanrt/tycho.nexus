@@ -66,11 +66,10 @@ abstract class ParsedRequest {
         }
     }
 
-    @SuppressWarnings("deprecation")
-    String selectVersion(final Versioning versioning, final VersionRange versionRange, final boolean findSnapshots)
-            throws ItemNotFoundException {
+    String selectVersion(final ResourceStoreRequest request, final Versioning versioning,
+            final VersionRange versionRange, final boolean findSnapshots) throws ItemNotFoundException {
         // do not rely on LATEST and RELEASE tag, because they not necessarily correspond to highest version number
-        String selectedVersion = getLatestVersion(versioning, findSnapshots);
+        String selectedVersion = getLatestVersion(request, versioning, findSnapshots);
 
         if (versionRange != null && !versionRange.containsVersion(new DefaultArtifactVersion(selectedVersion))) {
             final List<ArtifactVersion> versions = new ArrayList<ArtifactVersion>();
@@ -83,15 +82,16 @@ abstract class ParsedRequest {
             if (matchedVersion != null) {
                 selectedVersion = matchedVersion.toString();
             } else {
-                throw new ItemNotFoundException("No version found within range");
+                throw new ItemNotFoundException(ItemNotFoundException.reasonFor(request,
+                        "No version found within range"));
+
             }
         }
         return selectedVersion;
     }
 
-    @SuppressWarnings("deprecation")
-    private static String getLatestVersion(final Versioning versioning, final boolean findSnapshots)
-            throws ItemNotFoundException {
+    private static String getLatestVersion(final ResourceStoreRequest request, final Versioning versioning,
+            final boolean findSnapshots) throws ItemNotFoundException {
         final List<ArtifactVersion> artifactVersions = new ArrayList<ArtifactVersion>();
         for (final String version : versioning.getVersions()) {
             if (!findSnapshots && !version.trim().endsWith("-SNAPSHOT")) {
@@ -103,7 +103,8 @@ abstract class ParsedRequest {
 
         ArtifactVersion maxVersion = null;
         if (artifactVersions.isEmpty()) {
-            throw new ItemNotFoundException("maven-metadata.xml does not contain any version");
+            throw new ItemNotFoundException(ItemNotFoundException.reasonFor(request,
+                    "maven-metadata.xml does not contain any version"));
         }
         maxVersion = Collections.max(artifactVersions);
         return ((DefaultArtifactVersion) maxVersion).toString();

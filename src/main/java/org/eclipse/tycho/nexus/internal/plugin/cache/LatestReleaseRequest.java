@@ -14,19 +14,20 @@ import org.apache.maven.artifact.repository.metadata.Versioning;
 import org.apache.maven.artifact.versioning.VersionRange;
 import org.sonatype.nexus.proxy.ItemNotFoundException;
 import org.sonatype.nexus.proxy.LocalStorageException;
+import org.sonatype.nexus.proxy.ResourceStoreRequest;
 import org.sonatype.nexus.proxy.repository.Repository;
 
 public class LatestReleaseRequest extends ParsedRequest {
 
-    private final String requestPath;
+    private final ResourceStoreRequest request;
     private final String groupArtifactPath;
     private final String artifactNameStart;
     private final String artifactNameEnd;
     private final VersionRange versionRange;
 
-    public LatestReleaseRequest(final String requestPath, final String groupArtifactPath,
+    public LatestReleaseRequest(final ResourceStoreRequest request, final String groupArtifactPath,
             final String artifactNameStart, final String artifactNameEnd, final VersionRange versionRange) {
-        this.requestPath = requestPath;
+        this.request = request;
         this.groupArtifactPath = groupArtifactPath;
         this.artifactNameStart = artifactNameStart;
         this.artifactNameEnd = artifactNameEnd;
@@ -35,6 +36,7 @@ public class LatestReleaseRequest extends ParsedRequest {
 
     @Override
     ConversionResult resolve(final Repository repository) throws LocalStorageException {
+        final String requestPath = request.getRequestPath();
         try {
             final Versioning versioning = getVersioning(repository, metadataPath(groupArtifactPath + "/"));
             final String releaseVersion = versioning.getRelease();
@@ -42,7 +44,7 @@ public class LatestReleaseRequest extends ParsedRequest {
                 return new ConversionResult(requestPath);
             }
 
-            final String selectedVersion = selectVersion(versioning, versionRange, false);
+            final String selectedVersion = selectVersion(request, versioning, versionRange, false);
 
             final String releaseVersionDirectory = groupArtifactPath + "/" + selectedVersion + "/";
 

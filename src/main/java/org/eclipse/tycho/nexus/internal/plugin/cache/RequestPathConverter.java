@@ -78,7 +78,7 @@ public class RequestPathConverter {
 
                 final VersionRange versionRange = parseVersionRange(request);
 
-                return new LatestVersionRequest(requestPath, groupArtifactPath, artifactNameStart, artifactNameEnd,
+                return new LatestVersionRequest(request, groupArtifactPath, artifactNameStart, artifactNameEnd,
                         versionRange);
             }
 
@@ -89,7 +89,7 @@ public class RequestPathConverter {
                 final String artifactNameStart = matchResult.group(1);
                 final String artifactNameEnd = requestPath.substring(matchResult.end() - 1);
                 final VersionRange versionRange = parseVersionRange(request);
-                return new LatestReleaseRequest(requestPath, groupArtifactPath, artifactNameStart, artifactNameEnd,
+                return new LatestReleaseRequest(request, groupArtifactPath, artifactNameStart, artifactNameEnd,
                         versionRange);
             }
         }

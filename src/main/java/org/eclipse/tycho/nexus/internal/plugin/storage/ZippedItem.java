@@ -242,7 +242,8 @@ public class ZippedItem {
             }
         }
 
-        throw new ItemNotFoundException(new ResourceStoreRequest(getPath()));
+        throw new ItemNotFoundException(ItemNotFoundException.reasonFor(new ResourceStoreRequest(getPath()),
+                "the path within the zip file does not point to an existing zip entry"));
     }
 
     /**

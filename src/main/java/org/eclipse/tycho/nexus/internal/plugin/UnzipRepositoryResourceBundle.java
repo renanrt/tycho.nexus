@@ -14,16 +14,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.codehaus.plexus.component.annotations.Component;
-import org.sonatype.nexus.plugins.rest.AbstractNexusResourceBundle;
 import org.sonatype.nexus.plugins.rest.DefaultStaticResource;
 import org.sonatype.nexus.plugins.rest.NexusResourceBundle;
 import org.sonatype.nexus.plugins.rest.StaticResource;
 
 @Component(role = NexusResourceBundle.class, hint = "UnzipRepositoryResourceBundle")
-public class UnzipRepositoryResourceBundle extends AbstractNexusResourceBundle {
+public class UnzipRepositoryResourceBundle implements NexusResourceBundle {
     public static final String JS_SCRIPT_PATH = "js/unzip/unzip-repo.js";
 
-    @Override
     public List<StaticResource> getContributedResouces() {
         final List<StaticResource> result = new ArrayList<StaticResource>();
 

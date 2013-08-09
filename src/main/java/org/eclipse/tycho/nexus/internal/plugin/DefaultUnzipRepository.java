@@ -137,12 +137,12 @@ public class DefaultUnzipRepository extends AbstractShadowRepository implements 
      * meantime the master repository id will be stored without availability, compatibility checks
      * avoiding error logs.
      */
-    @SuppressWarnings("deprecation")
     @Override
     public void setMasterRepositoryId(final String id) throws NoSuchRepositoryException,
             IncompatibleMasterRepositoryException {
         try {
-            super.setMasterRepositoryId(id);
+            Repository repository = getRepositoryRegistry().getRepository(id);
+            super.setMasterRepository(repository);
             isMasterAvailable = true;
         } catch (final NoSuchRepositoryException e) {
             if (isNexusStarted) {
@@ -157,35 +157,48 @@ public class DefaultUnzipRepository extends AbstractShadowRepository implements 
     // see comment at setMasterRepositoryId(String id)
     @Override
     public void setMasterRepository(final Repository masterRepository) throws IncompatibleMasterRepositoryException {
-        isMasterAvailable = true;
         super.setMasterRepository(masterRepository);
+        isMasterAvailable = true;
     }
 
     // see comment at setMasterRepositoryId(String id)
     @Override
     public Repository getMasterRepository() {
-        if (isNexusStarted || isMasterAvailable) {
+        if (isNexusStarted && isMasterAvailable) {
             return super.getMasterRepository();
-        } else {
-            return null;
         }
+        return null;
+
     }
 
     // see comment at setMasterRepositoryId(String id)
     @Override
     public LocalStatus getLocalStatus() {
-        if (isNexusStarted || isMasterAvailable) {
+        if (isNexusStarted && isMasterAvailable) {
             return super.getLocalStatus();
         } else {
-            if (getCurrentConfiguration(false).getLocalStatus() == null) {
+            String localStatus = getCurrentConfiguration(false).getLocalStatus();
+            if (localStatus == null) {
                 return LocalStatus.OUT_OF_SERVICE;
             }
-            return LocalStatus.valueOf(getCurrentConfiguration(false).getLocalStatus());
+            return LocalStatus.valueOf(localStatus);
         }
     }
 
     @Subscribe
     public void onNexusStartedEvent(NexusStartedEvent evt) {
+        if (!isMasterAvailable) {
+            String repositoryId = getExternalConfiguration(false).getMasterRepositoryId();
+            try {
+                getLogger().info("setting master repository with id '" + repositoryId + "'");
+                setMasterRepositoryId(repositoryId);
+            } catch (NoSuchRepositoryException e) {
+                getLogger().error("[" + repositoryId + "] " + "cannot set master repository " + e.getMessage());
+
+            } catch (IncompatibleMasterRepositoryException e) {
+                getLogger().error("[" + repositoryId + "] " + "cannot set master repository " + e.getMessage());
+            }
+        }
         isNexusStarted = true;
     }
 

@@ -15,6 +15,7 @@ import org.apache.maven.artifact.repository.metadata.Versioning;
 import org.apache.maven.artifact.versioning.VersionRange;
 import org.sonatype.nexus.proxy.ItemNotFoundException;
 import org.sonatype.nexus.proxy.LocalStorageException;
+import org.sonatype.nexus.proxy.ResourceStoreRequest;
 import org.sonatype.nexus.proxy.repository.Repository;
 
 public class LatestVersionRequest extends ParsedRequest {
@@ -36,15 +37,15 @@ public class LatestVersionRequest extends ParsedRequest {
      * /org/eclipse/tycho/example/org.eclipse.tycho.example.p2repo/0.1.0/org.eclipse.tycho.example.
      * p2repo-0.1.0-assembly.zip-unzip/
      */
-    private final String requestPath;
+    final ResourceStoreRequest request;
     private final String groupArtifactPath;
     private final String artifactNameStart;
     private final String artifactNameEnd;
     private final VersionRange versionRange;
 
-    public LatestVersionRequest(final String requestPath, final String groupArtifactPath,
+    public LatestVersionRequest(final ResourceStoreRequest request, final String groupArtifactPath,
             final String artifactNameStart, final String artifactNameEnd, final VersionRange versionRange) {
-        this.requestPath = requestPath;
+        this.request = request;
         this.groupArtifactPath = groupArtifactPath;
         this.artifactNameStart = artifactNameStart;
         this.artifactNameEnd = artifactNameEnd;
@@ -53,10 +54,11 @@ public class LatestVersionRequest extends ParsedRequest {
 
     @Override
     ConversionResult resolve(final Repository repository) throws LocalStorageException {
+        final String requestPath = request.getRequestPath();
         try {
             final Versioning versioning = getVersioning(repository, metadataPath(groupArtifactPath + "/"));
 
-            final String selectedVersion = selectVersion(versioning, versionRange, true);
+            final String selectedVersion = selectVersion(request, versioning, versionRange, true);
             final String latestVersionDirectory = groupArtifactPath + "/" + selectedVersion + "/";
 
             if (selectedVersion.endsWith("-SNAPSHOT")) {
@@ -86,8 +88,8 @@ public class LatestVersionRequest extends ParsedRequest {
                 latestVersion.length() - "-SNAPSHOT".length());
         final String pathUpToVersion = latestVersionDirectory + artifactNameStart + "-" + latestVersionWithoutSnapshot;
         final String convertedPath = pathUpToVersion + "-" + latestTimestampVersion + artifactNameEnd;
-        return new ConversionResult(requestPath, convertedPath, latestVersion + "-" + latestTimestampVersion,
-                pathUpToVersion);
+        return new ConversionResult(request.getRequestPath(), convertedPath, latestVersion + "-"
+                + latestTimestampVersion, pathUpToVersion);
     }
 
 }
