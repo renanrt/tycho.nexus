@@ -11,6 +11,7 @@
 package org.eclipse.tycho.nexus.internal.plugin.cache;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -116,14 +117,17 @@ public class LatestVersionConverterTest {
     }
 
     private void assertPathConvertion(final ResourceStoreRequest request, final String convertedPath,
-            final boolean isPathConverted) throws Exception {
+            final boolean pathConversionExpected) throws Exception {
         final MavenRepository repositoryMock =
             createRepositoryMock("org/eclipse/tycho/nexus/org.eclipse.tycho.example.target/",
                 "org/eclipse/tycho/nexus/org.eclipse.tycho.example.target/0.7.1-SNAPSHOT/",
                 "org/eclipse/tycho/nexus/org.eclipse.tycho.example.target/0.6.1-SNAPSHOT/");
         final ConversionResult conversionResult = RequestPathConverter.convert(repositoryMock, request, true);
-        assertEquals(isPathConverted, conversionResult.isPathConverted());
+        assertEquals(pathConversionExpected, conversionResult.isPathConverted());
         assertEquals(convertedPath, conversionResult.getConvertedPath());
+        if (pathConversionExpected) {
+            assertTrue(convertedPath.contains(conversionResult.getLatestVersion()));
+        }
     }
 
     @SuppressWarnings("unchecked")

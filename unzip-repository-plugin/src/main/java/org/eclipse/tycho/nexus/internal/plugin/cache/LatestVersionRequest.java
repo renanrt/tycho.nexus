@@ -84,11 +84,11 @@ public class LatestVersionRequest extends ParsedRequest {
             throw new LocalStorageException(metadataPath(latestVersionDirectory)
                     + " does not contain current information in repository " + repository.getId());
         }
-        final String latestVersionWithoutSnapshot = latestVersion.substring(0,
-                latestVersion.length() - "-SNAPSHOT".length());
+        final String latestVersionWithoutSnapshot =
+            latestVersion.substring(0, latestVersion.length() - "-SNAPSHOT".length());
         final String pathUpToVersion = latestVersionDirectory + artifactNameStart + "-" + latestVersionWithoutSnapshot;
         final String convertedPath = pathUpToVersion + "-" + latestTimestampVersion + artifactNameEnd;
-        return new ConversionResult(request.getRequestPath(), convertedPath, latestVersion + "-"
+        return new ConversionResult(request.getRequestPath(), convertedPath, latestVersionWithoutSnapshot + "-"
                 + latestTimestampVersion, pathUpToVersion);
     }
 
