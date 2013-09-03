@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>org.eclipse.tycho.nexus.example</groupId>
+  <artifactId>org.eclipse.tycho.nexus.example.target</artifactId>
+  <versioning>
+    <versions>
+      <version>0.7.1-SNAPSHOT</version>
+    </versions>
+    <lastUpdated>20110718111322</lastUpdated>
+  </versioning>
+</metadata>
