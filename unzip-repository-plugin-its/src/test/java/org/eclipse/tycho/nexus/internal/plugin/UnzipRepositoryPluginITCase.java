@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.tycho.nexus.internal.plugin;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.sonatype.nexus.client.core.subsystem.content.Location.repositoryLocation;
@@ -18,7 +19,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
@@ -41,7 +41,7 @@ public class UnzipRepositoryPluginITCase extends AbstractUnzipRepositoryPluginIT
     @Parameters
     public static Collection<Object[]> data() {
         // nexus versions to be tested against
-        return Arrays.asList(//
+        return asList(//
                 new Object[] { getTestProperty("nexus.min.coords") }, //
                 new Object[] { getTestProperty("nexus.max.coords") });
     }
@@ -63,36 +63,77 @@ public class UnzipRepositoryPluginITCase extends AbstractUnzipRepositoryPluginIT
         super(nexusBundleCoordinates);
     }
 
-    private static final String EXAMPLE_POM = "org/example/artifact/1.0.1/artifact-1.0.1.pom";
-    private static final String EXAMPLE_JAR = "org/example/artifact/1.0.1/artifact-1.0.1.jar";
-    private static final String EXAMPLE_MAVEN_METADATA = "org/example/artifact/maven-metadata.xml";
+    private static final String EXAMPLE_GROUPID = "org.example";
+    private static final String EXAMPLE_ARTIFACTID = "artifact";
+    private static final String EXAMPLE_RELEASED_VERSION = "1.0.1";
+    private static final String EXAMPLE_SNAPSHOT_VERSION = "2.0.0-SNAPSHOT";
+    private static final String EXAMPLE_SNAPSHOT_TIMESTAMP = "2.0.0-20130904.072115-1";
+    private static final String EXAMPLE_PATH_PREFIX = EXAMPLE_GROUPID.replace('.', '/') + "/" + EXAMPLE_ARTIFACTID
+            + "/";
+    private static final String EXAMPLE_RELEASEPATH_SUFFIX = EXAMPLE_RELEASED_VERSION + "/" + EXAMPLE_ARTIFACTID + "-"
+            + EXAMPLE_RELEASED_VERSION;
+    private static final String EXAMPLE_SNAPSHOTPATH_SUFFIX = EXAMPLE_SNAPSHOT_VERSION + "/" + EXAMPLE_ARTIFACTID + "-"
+            + EXAMPLE_SNAPSHOT_TIMESTAMP;
+
+    private static final String EXAMPLE_RELEASED_POM = EXAMPLE_PATH_PREFIX + EXAMPLE_RELEASEPATH_SUFFIX + ".pom";
+    private static final String EXAMPLE_SNAPSHOT_POM = EXAMPLE_PATH_PREFIX + EXAMPLE_SNAPSHOTPATH_SUFFIX + ".pom";
+    private static final String EXAMPLE_RELEASED_JAR = EXAMPLE_PATH_PREFIX + EXAMPLE_RELEASEPATH_SUFFIX + ".jar";
+    private static final String EXAMPLE_SNAPSHOT_JAR = EXAMPLE_PATH_PREFIX + EXAMPLE_SNAPSHOTPATH_SUFFIX + ".jar";
+    private static final String EXAMPLE_SNAPSHOT_METADATA = EXAMPLE_PATH_PREFIX + EXAMPLE_SNAPSHOT_VERSION
+            + "/maven-metadata.xml";
+    private static final String EXAMPLE_MAVEN_METADATA = EXAMPLE_PATH_PREFIX + "maven-metadata.xml";
 
     @Before
     public void uploadExampleArtifacts() throws IOException {
-        if (!canResolveExampleArtifact()) {
-            uploadToReleasesRepository(EXAMPLE_POM);
-            uploadToReleasesRepository(EXAMPLE_JAR);
-            uploadToReleasesRepository(EXAMPLE_MAVEN_METADATA);
-            assertTrue(canResolveExampleArtifact());
+        String repositoryId = "releases";
+        if (!canResolveExampleArtifact(repositoryId, EXAMPLE_RELEASED_VERSION)) {
+            String pathPrefix = "artifacts/releases/";
+            uploadToRepository(pathPrefix, EXAMPLE_RELEASED_POM, repositoryId);
+            uploadToRepository(pathPrefix, EXAMPLE_RELEASED_JAR, repositoryId);
+            uploadToRepository(pathPrefix, EXAMPLE_MAVEN_METADATA, repositoryId);
+            assertTrue(canResolveExampleArtifact(repositoryId, EXAMPLE_RELEASED_VERSION));
+        }
+        repositoryId = "snapshots";
+        if (!canResolveExampleArtifact(repositoryId, EXAMPLE_SNAPSHOT_VERSION)) {
+            String pathPrefix = "artifacts/snapshots/";
+            uploadToRepository(pathPrefix, EXAMPLE_SNAPSHOT_POM, repositoryId);
+            uploadToRepository(pathPrefix, EXAMPLE_SNAPSHOT_JAR, repositoryId);
+            uploadToRepository(pathPrefix, EXAMPLE_MAVEN_METADATA, repositoryId);
+            uploadToRepository(pathPrefix, EXAMPLE_SNAPSHOT_METADATA, repositoryId);
+            assertTrue(canResolveExampleArtifact(repositoryId, EXAMPLE_SNAPSHOT_VERSION));
         }
     }
 
     @Test
     public void testUnzipRepoWithHostedRepoAsMaster() throws Exception {
-        assertDownloadExampleZipEntryFromUnzipRepository("releases.unzip");
+        assertDownloadExampleZipEntryFromUnzipRepository("releases.unzip", EXAMPLE_RELEASED_JAR, "artifacts/releases/");
     }
 
     @Test
     public void testUnzipRepoWithGroupRepoAsMaster() throws Exception {
-        assertDownloadExampleZipEntryFromUnzipRepository("releases.group.unzip");
+        assertDownloadExampleZipEntryFromUnzipRepository("releases.group.unzip", EXAMPLE_RELEASED_JAR,
+                "artifacts/releases/");
     }
 
-    private void assertDownloadExampleZipEntryFromUnzipRepository(final String unzipRepositoryId) throws IOException {
+    @Test
+    public void testUnzipRepoWithVirtualSnapshotVersion() throws Exception {
+        // use virtual version "SNAPSHOT" which should translate to latest available snapshot
+        assertDownloadExampleZipEntryFromUnzipRepository("snapshots.unzip", EXAMPLE_SNAPSHOT_JAR, EXAMPLE_PATH_PREFIX
+                + "SNAPSHOT/" + EXAMPLE_ARTIFACTID + "-SNAPSHOT.jar", "artifacts/snapshots/");
+    }
+
+    private void assertDownloadExampleZipEntryFromUnzipRepository(final String unzipRepositoryId, String artifactPath,
+            String testDataPrefix) throws IOException {
+        assertDownloadExampleZipEntryFromUnzipRepository(unzipRepositoryId, artifactPath, artifactPath, testDataPrefix);
+    }
+
+    private void assertDownloadExampleZipEntryFromUnzipRepository(final String unzipRepositoryId,
+            String localArtifactPath, String remoteArtifactPath, String testDataPrefix) throws IOException {
         final String pathInZip = "META-INF/maven/org.example/artifact/pom.properties";
         String downloadedContent;
         final File tempFile = File.createTempFile("test", "unzip");
         try {
-            final Location loc = repositoryLocation(unzipRepositoryId, EXAMPLE_JAR + "-unzip/" + pathInZip);
+            final Location loc = repositoryLocation(unzipRepositoryId, remoteArtifactPath + "-unzip/" + pathInZip);
             getNexusContentService().download(loc, tempFile);
             FileInputStream stream = new FileInputStream(tempFile);
             try {
@@ -103,7 +144,7 @@ public class UnzipRepositoryPluginITCase extends AbstractUnzipRepositoryPluginIT
         } finally {
             tempFile.delete();
         }
-        ZipFile zipFile = new ZipFile(testData().resolveFile("artifacts/" + EXAMPLE_JAR));
+        ZipFile zipFile = new ZipFile(testData().resolveFile(testDataPrefix + localArtifactPath));
         String expectedContent;
         try {
             ZipEntry entry = zipFile.getEntry(pathInZip);
@@ -114,18 +155,18 @@ public class UnzipRepositoryPluginITCase extends AbstractUnzipRepositoryPluginIT
         assertEquals(expectedContent, downloadedContent);
     }
 
-    private boolean canResolveExampleArtifact() {
+    private boolean canResolveExampleArtifact(String repositoryId, String version) {
         ResolveResponse resolveResponse = null;
         try {
             resolveResponse = getNexusArtifactMavenService().resolve(
-                    new ResolveRequest("releases", "org.example", "artifact", ResolveRequest.VERSION_RELEASE));
+                    new ResolveRequest(repositoryId, EXAMPLE_GROUPID, EXAMPLE_ARTIFACTID, version));
         } catch (final NexusClientNotFoundException e) {
-            // if it's not there yet... that's o.k.
+            return false;
         }
-        return resolveResponse != null //
-                && "org.example".equals(resolveResponse.getGroupId()) //
-                && "artifact".equals(resolveResponse.getArtifactId()) //
-                && "jar".equals(resolveResponse.getExtension()) //
-                && !resolveResponse.isSnapshot();
+        assertEquals(EXAMPLE_GROUPID, resolveResponse.getGroupId());
+        assertEquals(EXAMPLE_ARTIFACTID, resolveResponse.getArtifactId());
+        assertEquals("jar", resolveResponse.getExtension());
+        assertEquals(version.endsWith("-SNAPSHOT"), resolveResponse.isSnapshot());
+        return true;
     }
 }

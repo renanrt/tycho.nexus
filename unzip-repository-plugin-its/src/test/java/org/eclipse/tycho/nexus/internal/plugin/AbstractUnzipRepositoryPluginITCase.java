@@ -61,9 +61,10 @@ public abstract class AbstractUnzipRepositoryPluginITCase extends NexusRunningPa
         return configuration;
     }
 
-    protected void uploadToReleasesRepository(final String artifactPath) throws IOException {
-        final File resolveFile = testData().resolveFile("artifacts/" + artifactPath);
-        getNexusContentService().upload(repositoryLocation("releases", artifactPath), resolveFile);
+    protected void uploadToRepository(String testDataPathPrefix, final String artifactPath, String repositoryId)
+            throws IOException {
+        final File resolveFile = testData().resolveFile(testDataPathPrefix + artifactPath);
+        getNexusContentService().upload(repositoryLocation(repositoryId, artifactPath), resolveFile);
     }
 
     protected Content getNexusContentService() {

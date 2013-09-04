@@ -46,6 +46,32 @@
       </externalConfiguration>
     </repository>
     <repository>
+      <id>snapshots</id>
+      <name>snapshots</name>
+      <providerRole>org.sonatype.nexus.proxy.repository.Repository</providerRole>
+      <providerHint>maven2</providerHint>
+      <localStatus>IN_SERVICE</localStatus>
+      <notFoundCacheTTL>1440</notFoundCacheTTL>
+      <userManaged>true</userManaged>
+      <exposed>true</exposed>
+      <browseable>true</browseable>
+      <writePolicy>ALLOW_WRITE</writePolicy>
+      <indexable>true</indexable>
+      <searchable>true</searchable>
+      <localStorage>
+        <provider>file</provider>
+      </localStorage>
+      <externalConfiguration>
+        <proxyMode>ALLOW</proxyMode>
+        <artifactMaxAge>-1</artifactMaxAge>
+        <itemMaxAge>1440</itemMaxAge>
+        <cleanseRepositoryMetadata>false</cleanseRepositoryMetadata>
+        <downloadRemoteIndex>false</downloadRemoteIndex>
+        <checksumPolicy>WARN</checksumPolicy>
+        <repositoryPolicy>SNAPSHOT</repositoryPolicy>
+      </externalConfiguration>
+    </repository>
+    <repository>
       <id>releases.unzip</id>
       <name>releases.unzip</name>
       <providerRole>org.eclipse.tycho.nexus.internal.plugin.UnzipRepository</providerRole>
@@ -62,6 +88,27 @@
       </localStorage>
       <externalConfiguration>
         <masterRepositoryId>releases</masterRepositoryId>
+        <synchronizeAtStartup>false</synchronizeAtStartup>
+        <useVirtualVersion>true</useVirtualVersion>
+      </externalConfiguration>
+    </repository>
+    <repository>
+      <id>snapshots.unzip</id>
+      <name>snapshots.unzip</name>
+      <providerRole>org.eclipse.tycho.nexus.internal.plugin.UnzipRepository</providerRole>
+      <providerHint>org.eclipse.tycho.nexus.plugin.DefaultUnzipRepository</providerHint>
+      <localStatus>IN_SERVICE</localStatus>
+      <notFoundCacheTTL>15</notFoundCacheTTL>
+      <userManaged>true</userManaged>
+      <exposed>true</exposed>
+      <browseable>true</browseable>
+      <writePolicy>READ_ONLY</writePolicy>
+      <searchable>true</searchable>
+      <localStorage>
+        <provider>file</provider>
+      </localStorage>
+      <externalConfiguration>
+        <masterRepositoryId>snapshots</masterRepositoryId>
         <synchronizeAtStartup>false</synchronizeAtStartup>
         <useVirtualVersion>true</useVirtualVersion>
       </externalConfiguration>
