@@ -10,10 +10,6 @@
  *******************************************************************************/
 package org.eclipse.tycho.nexus.internal.plugin;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.io.IOException;
 import java.util.Collection;
 
@@ -21,8 +17,9 @@ import org.eclipse.tycho.nexus.internal.plugin.storage.Util;
 import org.eclipse.tycho.nexus.internal.plugin.storage.ZippedStorageCollectionItem;
 import org.eclipse.tycho.nexus.internal.plugin.test.RepositoryMock;
 import org.eclipse.tycho.nexus.internal.plugin.test.TestUtil;
-import org.eclipse.tycho.nexus.internal.plugin.test.UnzipRepositoryMock;
+import org.eclipse.tycho.nexus.internal.plugin.test.UnzipPluginTestSupport;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.sonatype.nexus.proxy.AccessDeniedException;
 import org.sonatype.nexus.proxy.IllegalOperationException;
@@ -39,24 +36,25 @@ import org.sonatype.nexus.proxy.repository.ShadowRepository;
 import org.sonatype.nexus.proxy.storage.UnsupportedStorageOperationException;
 import org.sonatype.nexus.util.ItemPathUtils;
 
-public abstract class DefaultUnzipRepositoryTest {
-    protected final RepositoryMock repositoryMock;
-    protected final DefaultUnzipRepository unzipRepo;
+public abstract class DefaultUnzipRepositoryTest extends UnzipPluginTestSupport {
+    protected RepositoryMock repositoryMock;
+    protected DefaultUnzipRepository unzipRepo;
 
-    public DefaultUnzipRepositoryTest() {
+    protected abstract RepositoryMock createRepositoryMock() throws Exception;
+
+    @Before
+    public void setup() throws Exception {
         repositoryMock = createRepositoryMock();
-        unzipRepo = UnzipRepositoryMock.createUnzipRepository(repositoryMock);
+        unzipRepo = createUnzipRepo(repositoryMock);
     }
-
-    protected abstract RepositoryMock createRepositoryMock();
 
     @Test
     public void testGetRepositoryKind() {
         final DefaultUnzipRepository repo = new DefaultUnzipRepository();
         final RepositoryKind kind = repo.getRepositoryKind();
-        assertEquals(UnzipRepository.class, kind.getMainFacet());
-        assertTrue(kind.isFacetAvailable(ShadowRepository.class));
-        assertFalse(kind.isFacetAvailable(HostedRepository.class));
+        Assert.assertEquals(UnzipRepository.class, kind.getMainFacet());
+        Assert.assertTrue(kind.isFacetAvailable(ShadowRepository.class));
+        Assert.assertFalse(kind.isFacetAvailable(HostedRepository.class));
     }
 
     @Test

@@ -10,10 +10,6 @@
  *******************************************************************************/
 package org.eclipse.tycho.nexus.internal.plugin.cache;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
@@ -25,11 +21,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.eclipse.tycho.nexus.internal.plugin.cache.ConversionResult;
-import org.eclipse.tycho.nexus.internal.plugin.cache.UnzipCache;
-import org.eclipse.tycho.nexus.internal.plugin.test.RepositoryMock;
 import org.eclipse.tycho.nexus.internal.plugin.test.TestUtil;
-import org.eclipse.tycho.nexus.internal.plugin.test.UnzipRepositoryMock;
+import org.eclipse.tycho.nexus.internal.plugin.test.UnzipPluginTestSupport;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +30,7 @@ import org.sonatype.nexus.proxy.ItemNotFoundException;
 import org.sonatype.nexus.proxy.StorageException;
 
 @SuppressWarnings("deprecation")
-public class UnzipCacheTest {
+public class UnzipCacheTest extends UnzipPluginTestSupport {
     private static final String PATH_UP_TO_VERSION = "/ga/1.0.0-SNAPSHOT/archive-1.0.0-";
 
     private static final String LATEST_VERSION = "20101013";
@@ -54,9 +47,8 @@ public class UnzipCacheTest {
     private static File latestOtherZip;
 
     @Before
-    public void setupTestRepos() throws StorageException, ItemNotFoundException {
-        snapshotRepoUnzipCache = UnzipRepositoryMock.createUnzipRepository(RepositoryMock.createSnapshotRepo())
-                .getCache();
+    public void setupTestRepos() throws Exception {
+        snapshotRepoUnzipCache = createUnzipRepo(createSnapshotRepo()).getCache();
 
         oldZip = snapshotRepoUnzipCache.getArchive(PATH_TO_OLD_ZIP);
         oldOtherzip = snapshotRepoUnzipCache.getArchive(PATH_TO_OLD_OTHER_ZIP);

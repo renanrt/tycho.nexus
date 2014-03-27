@@ -24,9 +24,11 @@ public final class ZippedStorageFileItem extends DefaultStorageFileItem {
 
     private static class ZippedStorageFileContentLocator implements ContentLocator {
         private final ZippedItem zippedItem;
+        private final long length;
 
-        private ZippedStorageFileContentLocator(final ZippedItem zippedItem) {
+        private ZippedStorageFileContentLocator(final ZippedItem zippedItem, long length) {
             this.zippedItem = zippedItem;
+            this.length = length;
         }
 
         @Override
@@ -44,6 +46,11 @@ public final class ZippedStorageFileItem extends DefaultStorageFileItem {
             return false;
         }
 
+        @Override
+        public long getLength() {
+            return length;
+        }
+
     }
 
     /**
@@ -58,11 +65,10 @@ public final class ZippedStorageFileItem extends DefaultStorageFileItem {
      */
     public ZippedStorageFileItem(final ZippedItem zippedItem, final long length) {
         super(zippedItem.getRepository(), new ResourceStoreRequest(zippedItem.getPath()), true, false,
-                new ZippedStorageFileContentLocator(zippedItem));
+                new ZippedStorageFileContentLocator(zippedItem, length));
         // At creation time the underlying zip entry is known.
         // Keeping this information avoids to open the zip and loop over the
         // entries when answering related questions
-        setLength(length);
         setModified(zippedItem.getLastModified());
     }
 

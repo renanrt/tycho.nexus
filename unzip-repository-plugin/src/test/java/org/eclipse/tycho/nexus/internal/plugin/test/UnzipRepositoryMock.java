@@ -13,7 +13,7 @@ package org.eclipse.tycho.nexus.internal.plugin.test;
 import org.easymock.EasyMock;
 import org.eclipse.tycho.nexus.internal.plugin.DefaultUnzipRepository;
 import org.sonatype.nexus.proxy.attributes.AttributesHandler;
-import org.sonatype.nexus.proxy.item.DefaultRepositoryItemUidFactory;
+import org.sonatype.nexus.proxy.item.LinkPersister;
 import org.sonatype.nexus.proxy.item.RepositoryItemUidFactory;
 import org.sonatype.nexus.proxy.repository.LocalStatus;
 import org.sonatype.nexus.proxy.repository.Repository;
@@ -22,15 +22,20 @@ import org.sonatype.nexus.proxy.storage.local.LocalRepositoryStorage;
 public class UnzipRepositoryMock extends DefaultUnzipRepository {
 
     private final Repository masterRepository;
-    private final LocalRepositoryStorage localStorage = new FSLocalRepositoryStorageMock();
+    private final LocalRepositoryStorage localStorage;
+    private final RepositoryItemUidFactory repositoryItemUidFactory;
 
-    public static DefaultUnzipRepository createUnzipRepository(final Repository masterRepo) {
-        return new UnzipRepositoryMock(masterRepo);
+    public static DefaultUnzipRepository createUnzipRepository(final Repository masterRepo,
+            LinkPersister linkPersister, RepositoryItemUidFactory repositoryItemUidFactory) {
+        return new UnzipRepositoryMock(masterRepo, linkPersister, repositoryItemUidFactory);
     }
 
-    private UnzipRepositoryMock(final Repository masterRepository) {
+    private UnzipRepositoryMock(final Repository masterRepository, LinkPersister linkPersister,
+            RepositoryItemUidFactory repositoryItemUidFactory) {
         super();
         this.masterRepository = masterRepository;
+        this.localStorage = new FSLocalRepositoryStorageMock(linkPersister);
+        this.repositoryItemUidFactory = repositoryItemUidFactory;
     }
 
     @Override
@@ -50,7 +55,7 @@ public class UnzipRepositoryMock extends DefaultUnzipRepository {
 
     @Override
     protected RepositoryItemUidFactory getRepositoryItemUidFactory() {
-        return new DefaultRepositoryItemUidFactory();
+        return repositoryItemUidFactory;
     }
 
     @Override

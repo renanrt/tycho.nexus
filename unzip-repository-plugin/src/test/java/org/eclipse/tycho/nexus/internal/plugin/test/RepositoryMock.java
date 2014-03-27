@@ -30,12 +30,10 @@ import org.sonatype.nexus.proxy.NoSuchResourceStoreException;
 import org.sonatype.nexus.proxy.ResourceStoreRequest;
 import org.sonatype.nexus.proxy.StorageException;
 import org.sonatype.nexus.proxy.item.ContentLocator;
-import org.sonatype.nexus.proxy.item.DefaultRepositoryItemUidFactory;
 import org.sonatype.nexus.proxy.item.DefaultStorageFileItem;
 import org.sonatype.nexus.proxy.item.RepositoryItemUidFactory;
 import org.sonatype.nexus.proxy.item.StorageCollectionItem;
 import org.sonatype.nexus.proxy.item.StorageItem;
-import org.sonatype.nexus.proxy.item.uid.DefaultRepositoryItemUidAttributeManager;
 import org.sonatype.nexus.proxy.item.uid.RepositoryItemUidAttributeManager;
 import org.sonatype.nexus.proxy.registry.ContentClass;
 import org.sonatype.nexus.proxy.repository.AbstractRepository;
@@ -48,13 +46,17 @@ public class RepositoryMock extends AbstractRepository {
     private final String repositoryId;
     private boolean behaveAsProxy = false;
 
+    private RepositoryItemUidFactory repositoryItemUidFactory;
+    private RepositoryItemUidAttributeManager repositoryItemUidAttributeManager;
+
     /**
      * Creates a Repository with dummy snapshot content from src/test/resources/snapshotRepo
      * 
      * @return
      */
-    public static RepositoryMock createSnapshotRepo() {
-        return new RepositoryMock("snapshotRepo");
+    public static RepositoryMock createSnapshotRepo(RepositoryItemUidFactory repositoryItemUidFactory,
+            RepositoryItemUidAttributeManager repositoryItemUidAttributeManager) {
+        return new RepositoryMock("snapshotRepo", repositoryItemUidFactory, repositoryItemUidAttributeManager);
     }
 
     /**
@@ -62,12 +64,16 @@ public class RepositoryMock extends AbstractRepository {
      * 
      * @return
      */
-    public static RepositoryMock createMasterRepo() {
-        return new RepositoryMock("masterRepo");
+    public static RepositoryMock createMasterRepo(RepositoryItemUidFactory repositoryItemUidFactory,
+            RepositoryItemUidAttributeManager repositoryItemUidAttributeManager) {
+        return new RepositoryMock("masterRepo", repositoryItemUidFactory, repositoryItemUidAttributeManager);
     }
 
-    private RepositoryMock(final String repositoryId) {
+    private RepositoryMock(final String repositoryId, RepositoryItemUidFactory repositoryItemUidFactory,
+            RepositoryItemUidAttributeManager repositoryItemUidAttributeManager) {
         this.repositoryId = repositoryId;
+        this.repositoryItemUidFactory = repositoryItemUidFactory;
+        this.repositoryItemUidAttributeManager = repositoryItemUidAttributeManager;
     }
 
     @Override
@@ -102,12 +108,12 @@ public class RepositoryMock extends AbstractRepository {
 
     @Override
     protected RepositoryItemUidFactory getRepositoryItemUidFactory() {
-        return new DefaultRepositoryItemUidFactory();
+        return repositoryItemUidFactory;
     }
 
     @Override
     public RepositoryItemUidAttributeManager getRepositoryItemUidAttributeManager() {
-        return new DefaultRepositoryItemUidAttributeManager();
+        return repositoryItemUidAttributeManager;
     }
 
     public StorageItem createStorageItem(final String path) throws StorageException, ItemNotFoundException,

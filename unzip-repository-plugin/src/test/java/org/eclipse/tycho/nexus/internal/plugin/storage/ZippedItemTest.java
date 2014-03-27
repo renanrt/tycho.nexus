@@ -13,11 +13,11 @@ package org.eclipse.tycho.nexus.internal.plugin.storage;
 import java.io.IOException;
 
 import org.eclipse.tycho.nexus.internal.plugin.DefaultUnzipRepository;
-import org.eclipse.tycho.nexus.internal.plugin.test.RepositoryMock;
 import org.eclipse.tycho.nexus.internal.plugin.test.TestUtil;
-import org.eclipse.tycho.nexus.internal.plugin.test.UnzipRepositoryMock;
+import org.eclipse.tycho.nexus.internal.plugin.test.UnzipPluginTestSupport;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.proxy.ItemNotFoundException;
@@ -27,11 +27,17 @@ import org.sonatype.nexus.proxy.item.DefaultStorageFileItem;
 import org.sonatype.nexus.util.ItemPathUtils;
 
 @SuppressWarnings("nls")
-public class ZippedItemTest {
+public class ZippedItemTest extends UnzipPluginTestSupport {
+
     private final String pathToArchive = "/dir/subdir/archive.zip";
     private final String pathToUnzippedArchive = "/dir/subdir/archive.zip" + Util.UNZIP_TYPE_EXTENSION;
-    private final DefaultUnzipRepository unzipReposMock =
-        UnzipRepositoryMock.createUnzipRepository(RepositoryMock.createMasterRepo());
+
+    private DefaultUnzipRepository unzipReposMock;
+
+    @Before
+    public void setup() throws Exception {
+        unzipReposMock = createUnzipRepo(createMasterRepo());
+    }
 
     @Test
     public void testZippedItemInRoot() throws ItemNotFoundException, IOException {
@@ -87,8 +93,8 @@ public class ZippedItemTest {
         Assert.assertEquals(pathToUnzippedArchive, zippedItem.getPath());
         Assert.assertNull(zippedItem.getMimeType());
 
-        final DefaultStorageCollectionItem zippedStorageItem =
-            (DefaultStorageCollectionItem) zippedItem.getZippedStorageItem();
+        final DefaultStorageCollectionItem zippedStorageItem = (DefaultStorageCollectionItem) zippedItem
+                .getZippedStorageItem();
         Assert.assertEquals(pathToUnzippedArchive, zippedStorageItem.getPath());
     }
 
@@ -101,8 +107,8 @@ public class ZippedItemTest {
         Assert.assertEquals(pathToUnzippedArchive, zippedItem.getPath());
         Assert.assertNull(zippedItem.getMimeType());
 
-        final DefaultStorageCollectionItem zippedStorageItem =
-            (DefaultStorageCollectionItem) zippedItem.getZippedStorageItem();
+        final DefaultStorageCollectionItem zippedStorageItem = (DefaultStorageCollectionItem) zippedItem
+                .getZippedStorageItem();
         Assert.assertEquals(pathToUnzippedArchive, zippedStorageItem.getPath());
     }
 
@@ -115,8 +121,8 @@ public class ZippedItemTest {
         Assert.assertEquals(pathToUnzippedArchive + "/" + pathInZip, zippedItem.getPath());
         Assert.assertNull(zippedItem.getMimeType());
 
-        final DefaultStorageCollectionItem zippedStorageItem =
-            (DefaultStorageCollectionItem) zippedItem.getZippedStorageItem();
+        final DefaultStorageCollectionItem zippedStorageItem = (DefaultStorageCollectionItem) zippedItem
+                .getZippedStorageItem();
         Assert.assertEquals(pathToUnzippedArchive + "/" + pathInZip, zippedStorageItem.getPath());
     }
 
@@ -127,13 +133,13 @@ public class ZippedItemTest {
 
         Assert.assertEquals(ItemPathUtils.cleanUpTrailingSlash(pathInZip), zippedItem.getPathInZip());
         Assert.assertEquals(ItemPathUtils.cleanUpTrailingSlash(pathToUnzippedArchive + "/" + pathInZip),
-            zippedItem.getPath());
+                zippedItem.getPath());
         Assert.assertNull(zippedItem.getMimeType());
 
-        final DefaultStorageCollectionItem zippedStorageItem =
-            (DefaultStorageCollectionItem) zippedItem.getZippedStorageItem();
+        final DefaultStorageCollectionItem zippedStorageItem = (DefaultStorageCollectionItem) zippedItem
+                .getZippedStorageItem();
         Assert.assertEquals(ItemPathUtils.cleanUpTrailingSlash(pathToUnzippedArchive + "/" + pathInZip),
-            zippedStorageItem.getPath());
+                zippedStorageItem.getPath());
     }
 
     @Test(expected = LocalStorageException.class)
@@ -157,7 +163,7 @@ public class ZippedItemTest {
         final ZippedItem zippedItem = createZippedItem(pathInZip);
 
         TestUtil.assertMembers(new String[] { pathToUnzippedArchive + "/" + pathInZip + "subdir" },
-            new String[] { pathToUnzippedArchive + "/" + pathInZip + "test.txt" }, zippedItem.listMembers());
+                new String[] { pathToUnzippedArchive + "/" + pathInZip + "test.txt" }, zippedItem.listMembers());
     }
 
     @Test(expected = LocalStorageException.class)

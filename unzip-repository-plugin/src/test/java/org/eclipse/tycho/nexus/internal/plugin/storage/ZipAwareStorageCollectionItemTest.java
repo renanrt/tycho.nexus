@@ -17,9 +17,10 @@ import java.util.ArrayList;
 import org.eclipse.tycho.nexus.internal.plugin.DefaultUnzipRepository;
 import org.eclipse.tycho.nexus.internal.plugin.test.RepositoryMock;
 import org.eclipse.tycho.nexus.internal.plugin.test.TestUtil;
-import org.eclipse.tycho.nexus.internal.plugin.test.UnzipRepositoryMock;
+import org.eclipse.tycho.nexus.internal.plugin.test.UnzipPluginTestSupport;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,15 +32,22 @@ import org.sonatype.nexus.proxy.item.StorageCollectionItem;
 import org.sonatype.nexus.proxy.item.StorageItem;
 
 @SuppressWarnings("nls")
-public class ZipAwareStorageCollectionItemTest {
+public class ZipAwareStorageCollectionItemTest extends UnzipPluginTestSupport {
 
     protected Logger testLogger = LoggerFactory.getLogger(getClass());
+
+    private RepositoryMock masterRepository;
+    private DefaultUnzipRepository unzipRepositoryMock;
+
+    @Before
+    public void setup() throws Exception {
+        masterRepository = createMasterRepo();
+        unzipRepositoryMock = createUnzipRepo(masterRepository);
+    }
 
     @Test
     public void testListWithArchiveMember() throws ItemNotFoundException, IOException, AccessDeniedException,
             NoSuchResourceStoreException, IllegalOperationException {
-        final RepositoryMock masterRepository = RepositoryMock.createMasterRepo();
-        final DefaultUnzipRepository unzipRepositoryMock = UnzipRepositoryMock.createUnzipRepository(masterRepository);
         final StorageCollectionItem collectionStorageItem = (StorageCollectionItem) masterRepository
                 .createStorageItem("/dir/subdir");
         final ZipAwareStorageCollectionItem zipAwareStorageCollectionItem = new ZipAwareStorageCollectionItem(
@@ -53,9 +61,8 @@ public class ZipAwareStorageCollectionItemTest {
 
     @Test
     public void testListWithSnapshotArchives() throws Exception {
-        final RepositoryMock masterRepository = RepositoryMock.createSnapshotRepo();
-        final DefaultUnzipRepository unzipRepositoryMock = UnzipRepositoryMock.createUnzipRepository(masterRepository);
-        final StorageCollectionItem collectionStorageItem = (StorageCollectionItem) masterRepository
+        unzipRepositoryMock = createUnzipRepo(createSnapshotRepo());
+        final StorageCollectionItem collectionStorageItem = (StorageCollectionItem) createSnapshotRepo()
                 .createStorageItem("/ga/1.0.0-SNAPSHOT");
         final ZipAwareStorageCollectionItem zipAwareStorageCollectionItem = new ZipAwareStorageCollectionItem(
                 unzipRepositoryMock, collectionStorageItem, testLogger);
@@ -63,14 +70,11 @@ public class ZipAwareStorageCollectionItemTest {
                 "/ga/1.0.0-SNAPSHOT/archive-1.0.0-SNAPSHOT-juhu.zip" + Util.UNZIP_TYPE_EXTENSION,
                 "/ga/1.0.0-SNAPSHOT/archive-1.0.0-SNAPSHOT.zip" + Util.UNZIP_TYPE_EXTENSION }, new String[0],
                 zipAwareStorageCollectionItem.list());
-
     }
 
     @Test
     public void testModificationTimes() throws ItemNotFoundException, IOException, AccessDeniedException,
             NoSuchResourceStoreException, IllegalOperationException {
-        final RepositoryMock masterRepository = RepositoryMock.createMasterRepo();
-        final DefaultUnzipRepository unzipRepositoryMock = UnzipRepositoryMock.createUnzipRepository(masterRepository);
         final StorageCollectionItem collectionStorageItem = (StorageCollectionItem) masterRepository
                 .createStorageItem("/dir/subdir");
         final ZipAwareStorageCollectionItem zipAwareStorageCollectionItem = new ZipAwareStorageCollectionItem(
@@ -88,8 +92,6 @@ public class ZipAwareStorageCollectionItemTest {
     @Test
     public void testListWithoutArchiveMember() throws ItemNotFoundException, IOException, AccessDeniedException,
             NoSuchResourceStoreException, IllegalOperationException {
-        final RepositoryMock masterRepository = RepositoryMock.createMasterRepo();
-        final DefaultUnzipRepository unzipRepositoryMock = UnzipRepositoryMock.createUnzipRepository(masterRepository);
         final StorageCollectionItem collectionStorageItem = (StorageCollectionItem) masterRepository
                 .createStorageItem("/dir");
         final ZipAwareStorageCollectionItem zipAwareStorageCollectionItem = new ZipAwareStorageCollectionItem(

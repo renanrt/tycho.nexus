@@ -30,8 +30,8 @@ import org.eclipse.tycho.nexus.internal.plugin.test.RepositoryMock;
 public class DefaultUnzipRepositoryAgainstProxyRepositoryTest extends DefaultUnzipRepositoryTest {
 
     @Override
-    protected RepositoryMock createRepositoryMock() {
-        final RepositoryMock masterRepo = RepositoryMock.createMasterRepo();
+    protected RepositoryMock createRepositoryMock() throws Exception {
+        final RepositoryMock masterRepo = createMasterRepo();
         masterRepo.setBehaveAsProxy(true);
         return masterRepo;
     }

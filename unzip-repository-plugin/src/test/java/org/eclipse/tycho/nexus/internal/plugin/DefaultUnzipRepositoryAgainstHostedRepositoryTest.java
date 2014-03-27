@@ -24,8 +24,10 @@ import org.sonatype.nexus.proxy.IllegalOperationException;
 import org.sonatype.nexus.proxy.ItemNotFoundException;
 import org.sonatype.nexus.proxy.NoSuchResourceStoreException;
 import org.sonatype.nexus.proxy.ResourceStoreRequest;
+import org.sonatype.nexus.proxy.item.RepositoryItemUidFactory;
 import org.sonatype.nexus.proxy.item.StorageCollectionItem;
 import org.sonatype.nexus.proxy.item.StorageItem;
+import org.sonatype.nexus.proxy.item.uid.RepositoryItemUidAttributeManager;
 import org.sonatype.nexus.util.ItemPathUtils;
 
 /**
@@ -34,8 +36,8 @@ import org.sonatype.nexus.util.ItemPathUtils;
 public class DefaultUnzipRepositoryAgainstHostedRepositoryTest extends DefaultUnzipRepositoryTest {
 
     @Override
-    protected RepositoryMock createRepositoryMock() {
-        return RepositoryMock.createMasterRepo();
+    protected RepositoryMock createRepositoryMock() throws Exception {
+        return createMasterRepo();
     }
 
     @Test

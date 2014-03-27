@@ -71,11 +71,11 @@
 
 	<properties>
 		<!-- nexus version we compile against -->
-		<nexus.version>2.6.0-01</nexus.version>
+		<nexus.version>2.7.0-01</nexus.version>
 		<!-- minimum nexus version to run ITs against -->
 		<nexus.test.min.version>${nexus.version}</nexus.test.min.version>
 		<!-- maximum nexus version to run ITs against -->
-		<nexus.test.max.version>2.6.2-01</nexus.test.max.version>
+		<nexus.test.max.version>2.7.1-01</nexus.test.max.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
@@ -125,6 +125,12 @@
 			<dependency>
 				<groupId>org.sonatype.nexus</groupId>
 				<artifactId>nexus-testsuite-support</artifactId>
+				<version>${nexus.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.sonatype.nexus</groupId>
+				<artifactId>nexus-test-common</artifactId>
 				<version>${nexus.version}</version>
 				<scope>test</scope>
 			</dependency>

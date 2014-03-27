@@ -10,17 +10,15 @@
  *******************************************************************************/
 package org.eclipse.tycho.nexus.internal.plugin.storage;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 
 import org.eclipse.tycho.nexus.internal.plugin.DefaultUnzipRepository;
-import org.eclipse.tycho.nexus.internal.plugin.test.RepositoryMock;
 import org.eclipse.tycho.nexus.internal.plugin.test.TestUtil;
-import org.eclipse.tycho.nexus.internal.plugin.test.UnzipRepositoryMock;
+import org.eclipse.tycho.nexus.internal.plugin.test.UnzipPluginTestSupport;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -32,36 +30,35 @@ import org.sonatype.nexus.proxy.NoSuchResourceStoreException;
 import org.sonatype.nexus.proxy.item.StorageItem;
 
 @SuppressWarnings("nls")
-public class ZippedStorageCollectionItemTest {
+public class ZippedStorageCollectionItemTest extends UnzipPluginTestSupport {
     private DefaultUnzipRepository unzipRepositoryMock;
 
     protected Logger testLogger = LoggerFactory.getLogger(getClass());
 
     @Before
-    public void setupRepo() {
-        unzipRepositoryMock = UnzipRepositoryMock.createUnzipRepository(RepositoryMock.createMasterRepo());
+    public void setupRepo() throws Exception {
+        unzipRepositoryMock = createUnzipRepo(createMasterRepo());
     }
 
     @Test
     public void testList() throws ItemNotFoundException, IOException, AccessDeniedException,
             NoSuchResourceStoreException, IllegalOperationException {
-        final ZippedItem zippedItem =
-            new ZippedItem(unzipRepositoryMock, "/dir/subdir/archive.zip", "dir", 0L, testLogger);
+        final ZippedItem zippedItem = new ZippedItem(unzipRepositoryMock, "/dir/subdir/archive.zip", "dir", 0L,
+                testLogger);
         final ZippedStorageCollectionItem zippedStorageCollectionItem = new ZippedStorageCollectionItem(zippedItem);
         TestUtil.assertMembers(new String[] { "/dir/subdir/archive.zip" + Util.UNZIP_TYPE_EXTENSION + "/dir/subdir" },
-            new String[] { "/dir/subdir/archive.zip" + Util.UNZIP_TYPE_EXTENSION + "/dir/test.txt" },
-            zippedStorageCollectionItem.list());
+                new String[] { "/dir/subdir/archive.zip" + Util.UNZIP_TYPE_EXTENSION + "/dir/test.txt" },
+                zippedStorageCollectionItem.list());
     }
 
     @Test
     public void testListInRoot() throws ItemNotFoundException, IOException, AccessDeniedException,
             NoSuchResourceStoreException, IllegalOperationException {
-        final ZippedItem zippedItem =
-            new ZippedItem(unzipRepositoryMock, "/dir/subdir/archive.zip", "", 0L, testLogger);
+        final ZippedItem zippedItem = new ZippedItem(unzipRepositoryMock, "/dir/subdir/archive.zip", "", 0L, testLogger);
         final ZippedStorageCollectionItem zippedStorageCollectionItem = new ZippedStorageCollectionItem(zippedItem);
         TestUtil.assertMembers(new String[] { "/dir/subdir/archive.zip" + Util.UNZIP_TYPE_EXTENSION + "/dir" },
-            new String[] { "/dir/subdir/archive.zip" + Util.UNZIP_TYPE_EXTENSION + "/test.txt" },
-            zippedStorageCollectionItem.list());
+                new String[] { "/dir/subdir/archive.zip" + Util.UNZIP_TYPE_EXTENSION + "/test.txt" },
+                zippedStorageCollectionItem.list());
     }
 
     @Test
@@ -72,13 +69,13 @@ public class ZippedStorageCollectionItemTest {
 
         final ZippedItem zipItem = new ZippedItem(unzipRepositoryMock, "/dir/subdir/archive.zip", "", time, testLogger);
         final ZippedStorageCollectionItem zipStorageCollectionItem = new ZippedStorageCollectionItem(zipItem);
-        assertEquals(time, zipStorageCollectionItem.getModified());
+        Assert.assertEquals(time, zipStorageCollectionItem.getModified());
 
         //timestamps of zip entries are not time zone aware, therefore all entries shall inherit
         //the timestamp of the zip file itself
         final Collection<StorageItem> list = zipStorageCollectionItem.list();
         for (final StorageItem storageItem : list) {
-            assertEquals(time, storageItem.getModified());
+            Assert.assertEquals(time, storageItem.getModified());
         }
     }
 
