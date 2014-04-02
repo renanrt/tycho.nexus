@@ -17,11 +17,13 @@ import static org.sonatype.nexus.client.core.subsystem.content.Location.reposito
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.IOUtils;
@@ -37,6 +39,8 @@ import org.sonatype.nexus.testsuite.support.NexusStartAndStopStrategy.Strategy;
 
 @NexusStartAndStopStrategy(Strategy.EACH_TEST)
 public class UnzipRepositoryPluginITCase extends AbstractUnzipRepositoryPluginITCase {
+
+    private static final String POM_PROPERTIES_PATH_IN_ZIP = "META-INF/maven/org.example/artifact/pom.properties";
 
     @Parameters
     public static Collection<Object[]> data() {
@@ -106,34 +110,49 @@ public class UnzipRepositoryPluginITCase extends AbstractUnzipRepositoryPluginIT
 
     @Test
     public void testUnzipRepoWithHostedRepoAsMaster() throws Exception {
-        assertDownloadExampleZipEntryFromUnzipRepository("releases.unzip", EXAMPLE_RELEASED_JAR, "artifacts/releases/");
+        assertEquals(getTestData(EXAMPLE_RELEASED_JAR, "artifacts/releases/"),
+                getFileFromZipInRepo("releases.unzip", EXAMPLE_RELEASED_JAR));
     }
 
     @Test
     public void testUnzipRepoWithGroupRepoAsMaster() throws Exception {
-        assertDownloadExampleZipEntryFromUnzipRepository("releases.group.unzip", EXAMPLE_RELEASED_JAR,
-                "artifacts/releases/");
+        assertEquals(getTestData(EXAMPLE_RELEASED_JAR, "artifacts/releases/"),
+                getFileFromZipInRepo("releases.group.unzip", EXAMPLE_RELEASED_JAR));
     }
 
     @Test
     public void testUnzipRepoWithVirtualSnapshotVersion() throws Exception {
         // use virtual version "SNAPSHOT" which should translate to latest available snapshot
-        assertDownloadExampleZipEntryFromUnzipRepository("snapshots.unzip", EXAMPLE_SNAPSHOT_JAR, EXAMPLE_PATH_PREFIX
-                + "SNAPSHOT/" + EXAMPLE_ARTIFACTID + "-SNAPSHOT.jar", "artifacts/snapshots/");
+        assertEquals(
+                getTestData(EXAMPLE_SNAPSHOT_JAR, "artifacts/snapshots/"),
+                getFileFromZipInRepo("snapshots.unzip", EXAMPLE_PATH_PREFIX + "SNAPSHOT/" + EXAMPLE_ARTIFACTID
+                        + "-SNAPSHOT.jar"));
     }
 
-    private void assertDownloadExampleZipEntryFromUnzipRepository(final String unzipRepositoryId, String artifactPath,
-            String testDataPrefix) throws IOException {
-        assertDownloadExampleZipEntryFromUnzipRepository(unzipRepositoryId, artifactPath, artifactPath, testDataPrefix);
+    private String getTestData(String localArtifactPath, String testDataPrefix) throws ZipException, IOException {
+        ZipFile zipFile = new ZipFile(testData().resolveFile(testDataPrefix + localArtifactPath));
+        String expectedContent;
+        try {
+            ZipEntry entry = zipFile.getEntry(POM_PROPERTIES_PATH_IN_ZIP);
+            expectedContent = IOUtils.toString(zipFile.getInputStream(entry));
+        } finally {
+            zipFile.close();
+        }
+        return expectedContent;
     }
 
-    private void assertDownloadExampleZipEntryFromUnzipRepository(final String unzipRepositoryId,
-            String localArtifactPath, String remoteArtifactPath, String testDataPrefix) throws IOException {
-        final String pathInZip = "META-INF/maven/org.example/artifact/pom.properties";
+    private String getFileFromZipInRepo(final String unzipRepositoryId, String zipArchivePath) throws IOException,
+            FileNotFoundException {
+        String pathToFileInRepo = zipArchivePath + "-unzip/" + POM_PROPERTIES_PATH_IN_ZIP;
+        return getContentFromRepo(unzipRepositoryId, pathToFileInRepo);
+    }
+
+    private String getContentFromRepo(final String unzipRepositoryId, String path) throws IOException,
+            FileNotFoundException {
         String downloadedContent;
         final File tempFile = File.createTempFile("test", "unzip");
         try {
-            final Location loc = repositoryLocation(unzipRepositoryId, remoteArtifactPath + "-unzip/" + pathInZip);
+            final Location loc = repositoryLocation(unzipRepositoryId, path);
             getNexusContentService().download(loc, tempFile);
             FileInputStream stream = new FileInputStream(tempFile);
             try {
@@ -144,15 +163,7 @@ public class UnzipRepositoryPluginITCase extends AbstractUnzipRepositoryPluginIT
         } finally {
             tempFile.delete();
         }
-        ZipFile zipFile = new ZipFile(testData().resolveFile(testDataPrefix + localArtifactPath));
-        String expectedContent;
-        try {
-            ZipEntry entry = zipFile.getEntry(pathInZip);
-            expectedContent = IOUtils.toString(zipFile.getInputStream(entry));
-        } finally {
-            zipFile.close();
-        }
-        assertEquals(expectedContent, downloadedContent);
+        return downloadedContent;
     }
 
     private boolean canResolveExampleArtifact(String repositoryId, String version) {
