@@ -13,7 +13,6 @@ package org.eclipse.tycho.nexus.internal.plugin.storage;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.sonatype.nexus.proxy.ResourceStoreRequest;
 import org.sonatype.nexus.proxy.item.ContentLocator;
 import org.sonatype.nexus.proxy.item.DefaultStorageFileItem;
 
@@ -64,8 +63,8 @@ public final class ZippedStorageFileItem extends DefaultStorageFileItem {
      *            the modification time of the represented file
      */
     public ZippedStorageFileItem(final ZippedItem zippedItem, final long length) {
-        super(zippedItem.getRepository(), new ResourceStoreRequest(zippedItem.getPath()), true, false,
-                new ZippedStorageFileContentLocator(zippedItem, length));
+        super(zippedItem.getRepository(), zippedItem.getRequest(), true, false, new ZippedStorageFileContentLocator(
+                zippedItem, length));
         // At creation time the underlying zip entry is known.
         // Keeping this information avoids to open the zip and loop over the
         // entries when answering related questions

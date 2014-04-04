@@ -11,7 +11,9 @@
 package org.eclipse.tycho.nexus.internal.plugin;
 
 import static java.util.Arrays.asList;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.sonatype.nexus.client.core.subsystem.content.Location.repositoryLocation;
 
@@ -109,19 +111,46 @@ public class UnzipRepositoryPluginITCase extends AbstractUnzipRepositoryPluginIT
     }
 
     @Test
-    public void testUnzipRepoWithHostedRepoAsMaster() throws Exception {
+    public void testListOnGroupIdFolderInUnzipRepository() throws Exception {
+        assertThat(getContentFromRepo("releases.unzip", "/org/example"), containsString(">artifact/</a>"));
+    }
+
+    @Test
+    public void testListOnFolderContainingArchiveInUnzipRepository() throws Exception {
+        assertThat(getContentFromRepo("snapshots.unzip", "/org/example/artifact/2.0.0-SNAPSHOT/"),
+                containsString(">artifact-2.0.0-SNAPSHOT.jar-unzip/</a>"));
+    }
+
+    @Test
+    public void testListArchiveContentInUnzipRepository() throws Exception {
+        assertThat(
+                getContentFromRepo("snapshots.unzip",
+                        "/org/example/artifact/2.0.0-SNAPSHOT/artifact-2.0.0-SNAPSHOT.jar-unzip/org/dubdidel/dei"),
+                containsString(">Dei.class</a>"));
+    }
+
+    @Test
+    public void testListArchiveContentWithNestedFoldersInUnzipRepository() throws Exception {
+        assertThat(
+                getContentFromRepo("snapshots.unzip",
+                        "/org/example/artifact/2.0.0-SNAPSHOT/artifact-2.0.0-SNAPSHOT.jar-unzip/org/dubdidel/"),
+                containsString(">dei/</a>"));
+    }
+
+    @Test
+    public void testGetArtifactFromUnzipRepoWithHostedRepoAsMaster() throws Exception {
         assertEquals(getTestData(EXAMPLE_RELEASED_JAR, "artifacts/releases/"),
                 getFileFromZipInRepo("releases.unzip", EXAMPLE_RELEASED_JAR));
     }
 
     @Test
-    public void testUnzipRepoWithGroupRepoAsMaster() throws Exception {
+    public void testGetArtifactFromUnzipRepoWithGroupRepoAsMaster() throws Exception {
         assertEquals(getTestData(EXAMPLE_RELEASED_JAR, "artifacts/releases/"),
                 getFileFromZipInRepo("releases.group.unzip", EXAMPLE_RELEASED_JAR));
     }
 
     @Test
-    public void testUnzipRepoWithVirtualSnapshotVersion() throws Exception {
+    public void testGetArtifactFromUnzipRepoWithVirtualSnapshotVersion() throws Exception {
         // use virtual version "SNAPSHOT" which should translate to latest available snapshot
         assertEquals(
                 getTestData(EXAMPLE_SNAPSHOT_JAR, "artifacts/snapshots/"),

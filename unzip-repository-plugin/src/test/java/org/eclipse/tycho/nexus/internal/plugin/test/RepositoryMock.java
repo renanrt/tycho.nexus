@@ -27,6 +27,7 @@ import org.sonatype.nexus.proxy.IllegalOperationException;
 import org.sonatype.nexus.proxy.ItemNotFoundException;
 import org.sonatype.nexus.proxy.LocalStorageException;
 import org.sonatype.nexus.proxy.NoSuchResourceStoreException;
+import org.sonatype.nexus.proxy.RequestContext;
 import org.sonatype.nexus.proxy.ResourceStoreRequest;
 import org.sonatype.nexus.proxy.StorageException;
 import org.sonatype.nexus.proxy.item.ContentLocator;
@@ -165,13 +166,14 @@ public class RepositoryMock extends AbstractRepository {
                 final StorageCollectionItem collectionItem = EasyMock.createMock(StorageCollectionItem.class);
                 EasyMock.expect(collectionItem.getRepositoryId()).andStubReturn(repositoryId);
                 EasyMock.expect(collectionItem.getPath()).andStubReturn(pathWithoutTrailingSlash);
-                EasyMock.expect(collectionItem.getResourceStoreRequest()).andAnswer(
+                EasyMock.expect(collectionItem.getResourceStoreRequest()).andStubAnswer(
                         new IAnswer<ResourceStoreRequest>() {
                             @Override
                             public ResourceStoreRequest answer() throws Throwable {
                                 return new ResourceStoreRequest(pathWithoutTrailingSlash);
                             }
                         });
+                EasyMock.expect(collectionItem.getItemContext()).andStubReturn(new RequestContext());
                 EasyMock.expect(collectionItem.list()).andAnswer(new IAnswer<Collection<StorageItem>>() {
 
                     @Override

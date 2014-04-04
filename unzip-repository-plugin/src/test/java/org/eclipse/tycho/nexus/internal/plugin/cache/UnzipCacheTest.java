@@ -31,6 +31,7 @@ import org.sonatype.nexus.proxy.StorageException;
 
 @SuppressWarnings("deprecation")
 public class UnzipCacheTest extends UnzipPluginTestSupport {
+
     private static final String PATH_UP_TO_VERSION = "/ga/1.0.0-SNAPSHOT/archive-1.0.0-";
 
     private static final String LATEST_VERSION = "20101013";

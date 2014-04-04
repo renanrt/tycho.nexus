@@ -15,6 +15,7 @@ import java.util.Collection;
 
 import org.eclipse.tycho.nexus.internal.plugin.storage.Util;
 import org.eclipse.tycho.nexus.internal.plugin.storage.ZippedStorageCollectionItem;
+import org.eclipse.tycho.nexus.internal.plugin.storage.ZippedStorageFileItem;
 import org.eclipse.tycho.nexus.internal.plugin.test.RepositoryMock;
 import org.eclipse.tycho.nexus.internal.plugin.test.TestUtil;
 import org.eclipse.tycho.nexus.internal.plugin.test.UnzipPluginTestSupport;
@@ -96,11 +97,15 @@ public abstract class DefaultUnzipRepositoryTest extends UnzipPluginTestSupport 
     }
 
     @Test
-    public void testRetriveFileInArchive() throws IllegalOperationException, ItemNotFoundException, IOException {
+    public void testRetrieveFileInArchive() throws Exception {
         final String filePath = "/dir/subdir/archive.zip" + Util.UNZIP_TYPE_EXTENSION + "/test.txt";
-        final StorageItem item = unzipRepo.doRetrieveItem(new ResourceStoreRequest(filePath));
-        Assert.assertTrue(item instanceof DefaultStorageFileItem);
-        final DefaultStorageFileItem fileItem = (DefaultStorageFileItem) item;
+        ResourceStoreRequest request = new ResourceStoreRequest(filePath);
+        request.setRequestUrl("http://foo");
+        final StorageItem item = unzipRepo.doRetrieveItem(request);
+        Assert.assertEquals("request URL not preserved - bug 431866", "http://foo", item.getResourceStoreRequest()
+                .getRequestUrl());
+        Assert.assertTrue(item instanceof ZippedStorageFileItem);
+        final ZippedStorageFileItem fileItem = (ZippedStorageFileItem) item;
         Assert.assertEquals("text/plain", fileItem.getMimeType());
         Assert.assertEquals(filePath, fileItem.getPath());
         TestUtil.assertContent("some content", fileItem);
@@ -139,11 +144,14 @@ public abstract class DefaultUnzipRepositoryTest extends UnzipPluginTestSupport 
     }
 
     @Test
-    public void testRetrieveSubCollectionInArchive() throws IllegalOperationException, ItemNotFoundException,
-            AccessDeniedException, NoSuchResourceStoreException, IOException {
+    public void testRetrieveSubCollectionInArchive() throws Exception {
         final String collectionPath = "/dir/subdir/archive.zip" + Util.UNZIP_TYPE_EXTENSION + "/dir/subdir";
-        final StorageItem item = unzipRepo.doRetrieveItem(new ResourceStoreRequest(collectionPath));
+        final ResourceStoreRequest request = new ResourceStoreRequest(collectionPath);
+        request.setRequestUrl("http://foo");
+        final StorageItem item = unzipRepo.doRetrieveItem(request);
         Assert.assertTrue(item instanceof ZippedStorageCollectionItem);
+        Assert.assertEquals("request URL not preserved - bug 431866", "http://foo", item.getResourceStoreRequest()
+                .getRequestUrl());
         final StorageCollectionItem collectionItem = (StorageCollectionItem) item;
         Assert.assertEquals(collectionPath, collectionItem.getPath());
         final Collection<StorageItem> members = collectionItem.list();

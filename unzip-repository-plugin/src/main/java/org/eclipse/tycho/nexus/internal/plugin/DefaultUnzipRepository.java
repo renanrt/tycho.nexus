@@ -190,7 +190,8 @@ public class DefaultUnzipRepository extends AbstractShadowRepository implements 
         if (!isMasterAvailable) {
             String repositoryId = getExternalConfiguration(false).getMasterRepositoryId();
             try {
-                getLogger().debug("setting master repository '" + repositoryId + "' for unzip repository '" + getId() + "'");
+                getLogger().debug(
+                        "setting master repository '" + repositoryId + "' for unzip repository '" + getId() + "'");
                 setMasterRepositoryId(repositoryId);
             } catch (NoSuchRepositoryException e) {
                 getLogger().error("[" + repositoryId + "] " + "cannot set master repository " + e.getMessage());
@@ -220,18 +221,26 @@ public class DefaultUnzipRepository extends AbstractShadowRepository implements 
      * access folders (some folders are only accessible if the request URL end with a double slash).
      * In addition this method also finds file items if the request URL ends with a slash.
      * 
-     * @param request
+     * @param originalRequest
      *            the request that defines which item be retrieved
+     * @param conversionResult
      * @return the item from the master repository
      * @throws ItemNotFoundException
      *             is thrown if there is no item under the specified request path in the master
      *             repository
      * @throws LocalStorageException
      */
-    StorageItem retrieveItemFromMaster(final String requestPath) throws ItemNotFoundException, LocalStorageException {
+    StorageItem retrieveItemFromMaster(final ResourceStoreRequest originalRequest, ConversionResult conversionResult)
+            throws ItemNotFoundException, LocalStorageException {
         try {
-            final ResourceStoreRequest request = new ResourceStoreRequest(requestPath);
-            return doRetrieveItemFromMaster(request);
+            // use original request with modified path (e.g. like in AbstractMavenRepository.doRetrieveArtifactItem)
+            originalRequest.pushRequestPath(conversionResult.getConvertedPath());
+            try {
+                return doRetrieveItemFromMaster(originalRequest);
+            } finally {
+                originalRequest.popRequestPath();
+            }
+
         } catch (final IllegalOperationException e) {
             throw new LocalStorageException(e);
         } catch (@SuppressWarnings("deprecation") final org.sonatype.nexus.proxy.StorageException e) {
@@ -259,7 +268,7 @@ public class DefaultUnzipRepository extends AbstractShadowRepository implements 
         // a) path does not point to zip content (-> null)
         // b) a path to a file/folder inside a zip file (-> ZippedItem is created and returned)
         // c) a non-existing path under an existing zip file (-> retrieving ZippedItem fails with ItemNotFoundException)
-        final ZippedItem zippedItem = getZippedItem(conversionResult);
+        final ZippedItem zippedItem = getZippedItem(conversionResult, request);
         if (zippedItem != null) {
             final StorageItem zippedStorageItem = zippedItem.getZippedStorageItem();
             getLogger().debug(timeTrace.getMessage());
@@ -268,7 +277,7 @@ public class DefaultUnzipRepository extends AbstractShadowRepository implements 
 
         // check if item exists in master repository
         // this call will fail with ItemNotFoundException if the item does not exist in the master repository
-        final StorageItem masterItem = retrieveItemFromMaster(conversionResult.getConvertedPath());
+        final StorageItem masterItem = retrieveItemFromMaster(request, conversionResult);
 
         if (masterItem instanceof StorageCollectionItem) {
             // item is non-zip folder
@@ -291,14 +300,15 @@ public class DefaultUnzipRepository extends AbstractShadowRepository implements 
      * 
      * @param conversionResult
      *            the result of the snapshot path conversion, containing the converted path
+     * @param request
      * @return item that represents a file or folder within a zip file, <code>null</code> if the
      *         requested path does not point to zip content
      * @throws LocalStorageException
      * @throws ItemNotFoundException
      *             is thrown if for non-existing or invalid request path
      */
-    private ZippedItem getZippedItem(final ConversionResult conversionResult) throws LocalStorageException,
-            ItemNotFoundException {
+    private ZippedItem getZippedItem(final ConversionResult conversionResult, ResourceStoreRequest request)
+            throws LocalStorageException, ItemNotFoundException {
         final StringBuilder pathInZip = new StringBuilder();
         final String[] pathSegments = conversionResult.getConvertedPath().split("/");
         String zipFilePath = "";
@@ -332,8 +342,8 @@ public class DefaultUnzipRepository extends AbstractShadowRepository implements 
             // creating a new ZippedItem fails with ItemNotFoundException if a non-existing file or folder
             // inside the (existing) zip file is accessed
             getLogger().debug(conversionResult.getConvertedPath() + " points into a zip file.");
-            final ZippedItem zippedItem = new ZippedItem(this, zipItemPath, pathInZip.toString(), zipLastModified,
-                    getLogger());
+            final ZippedItem zippedItem = ZippedItem.newZippedItem(this, request, zipItemPath, pathInZip.toString(),
+                    zipLastModified, getLogger());
             return zippedItem;
         }
         return null;

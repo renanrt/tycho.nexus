@@ -24,6 +24,7 @@ import org.eclipse.tycho.nexus.internal.plugin.DefaultUnzipRepository;
 import org.slf4j.Logger;
 import org.sonatype.nexus.proxy.ItemNotFoundException;
 import org.sonatype.nexus.proxy.LocalStorageException;
+import org.sonatype.nexus.proxy.RequestContext;
 import org.sonatype.nexus.proxy.ResourceStoreRequest;
 import org.sonatype.nexus.proxy.item.StorageCollectionItem;
 import org.sonatype.nexus.proxy.item.StorageFileItem;
@@ -57,17 +58,20 @@ public class ZippedItem {
     }
 
     private final DefaultUnzipRepository repository;
-    private final StorageItem zippedStorageItem;
+    private StorageItem zippedStorageItem;
     private final String pathInZip;
     private final String zipItemPath;
     private final long lastModified;
     private final Logger logger;
+    private final ResourceStoreRequest request;
 
     /**
      * Creates a ZippedItem for a file or folder based on the path to and inside the zip file.
      * 
      * @param repository
      *            the repository in which the zipped item is accessed (the unzip repository)
+     * @param request
+     *            the original request for this item
      * @param zipItemPath
      *            the path to the zip file
      * @param pathInZip
@@ -79,24 +83,40 @@ public class ZippedItem {
      * @throws LocalStorageException
      *             is thrown if an issue with the zip file itself occured
      */
-    public ZippedItem(final DefaultUnzipRepository repository, final String zipItemPath, final String pathInZip,
-            final long lastModified, final Logger logger) throws ItemNotFoundException, LocalStorageException {
-        this.repository = repository;
-        this.zipItemPath = zipItemPath;
-
-        this.lastModified = lastModified;
-        this.logger = logger;
-
-        if (pathInZip != null) {
-            this.pathInZip = removeTrailingSlash(pathInZip);
-        } else {
-            this.pathInZip = "";
-        }
-        zippedStorageItem = createZippedStorageItem();
+    public static ZippedItem newZippedItem(final DefaultUnzipRepository repository, final ResourceStoreRequest request,
+            final String zipItemPath, final String pathInZip, final long lastModified, final Logger logger)
+            throws ItemNotFoundException, LocalStorageException {
+        ZippedItem result = new ZippedItem(repository, request, zipItemPath, pathInZip, lastModified, logger);
+        result.initZippedStorageItem();
+        return result;
     }
 
-    private static String removeTrailingSlash(final String path) {
-        return (path.endsWith("/") ? path.substring(0, path.length() - 1) : path);
+    /**
+     * Creates a ZippedItem which is the child of a folder being listed.
+     * 
+     * @param repository
+     *            the repository in which the zipped item is accessed (the unzip repository)
+     * @param parentContext
+     *            the context for the request of the parent item being listed
+     * @param zipItemPath
+     *            the path to the zip file
+     * @param pathInZip
+     *            the path of the zipped item relative to the zip file
+     * @param lastModified
+     *            the modification timestamp of the zip file and all entries
+     * @throws ItemNotFoundException
+     *             is thrown if the path within the zip file does not point to an existing zip entry
+     * @throws LocalStorageException
+     *             is thrown if an issue with the zip file itself occured
+     */
+    public static ZippedItem newZippedChildItem(DefaultUnzipRepository repository, RequestContext parentContext,
+            String zipItemPath, String pathInZip, long lastModified, Logger logger) throws LocalStorageException,
+            ItemNotFoundException {
+        ResourceStoreRequest requestForChild = createRequestForChild(parentContext, zipItemPath, pathInZip);
+
+        ZippedItem result = new ZippedItem(repository, requestForChild, zipItemPath, pathInZip, lastModified, logger);
+        result.initZippedStorageItem();
+        return result;
     }
 
     /**
@@ -109,21 +129,42 @@ public class ZippedItem {
      *            the zip entry representing the zipped file in the zip file
      * @throws ItemNotFoundException
      */
-    private ZippedItem(final ZippedItem parentItem, final ZipEntry entry, final Logger logger)
+    public static ZippedItem newZippedChildItem(final ZippedItem parentItem, final ZipEntry entry, final Logger logger)
             throws ItemNotFoundException {
-        repository = parentItem.getRepository();
-        zipItemPath = parentItem.zipItemPath;
+        ResourceStoreRequest requestForChild = createRequestForChild(parentItem.getRequest().getRequestContext(),
+                parentItem.zipItemPath, entry.getName());
 
-        lastModified = parentItem.getLastModified();
+        ZippedItem result = new ZippedItem(parentItem.getRepository(), requestForChild, parentItem.zipItemPath,
+                entry.getName(), parentItem.getLastModified(), logger);
+        result.initZippedStorageItem(entry);
+        return result;
+    }
+
+    private static ResourceStoreRequest createRequestForChild(RequestContext parentContext, String zipItemPath,
+            String pathInZip) {
+        ResourceStoreRequest request = new ResourceStoreRequest(getPath(zipItemPath, pathInZip));
+        request.getRequestContext().setParentContext(parentContext);
+        return request;
+    }
+
+    private static String removeTrailingSlash(final String path) {
+        return (path.endsWith("/") ? path.substring(0, path.length() - 1) : path);
+    }
+
+    private ZippedItem(final DefaultUnzipRepository repository, final ResourceStoreRequest request,
+            final String zipItemPath, final String pathInZip, final long lastModified, final Logger logger) {
+        this.repository = repository;
+        this.request = request;
+        this.zipItemPath = zipItemPath;
+
+        this.lastModified = lastModified;
         this.logger = logger;
 
-        if (entry.getName() != null) {
-            final String pathInZip = entry.getName();
+        if (pathInZip != null) {
             this.pathInZip = removeTrailingSlash(pathInZip);
         } else {
-            pathInZip = "";
+            this.pathInZip = "";
         }
-        zippedStorageItem = createZippedStorageItem(entry);
     }
 
     /**
@@ -145,6 +186,10 @@ public class ZippedItem {
      * @return the absolute path of the zipped entry
      */
     public String getPath() {
+        return getPath(zipItemPath, pathInZip);
+    }
+
+    private static String getPath(String zipItemPath, String pathInZip) {
         final String unzippedPath = zipItemPath + Util.UNZIP_TYPE_EXTENSION;
         if (pathInZip != null && !"".equals(pathInZip)) {
             return unzippedPath + "/" + pathInZip;
@@ -159,7 +204,6 @@ public class ZippedItem {
      * @return the request for this zipped item
      */
     public ResourceStoreRequest getRequest() {
-        final ResourceStoreRequest request = new ResourceStoreRequest(getPath(), true, false);
         return request;
     }
 
@@ -188,11 +232,11 @@ public class ZippedItem {
         }
     }
 
-    private StorageItem createZippedStorageItem(final ZipEntry entry) {
+    private void initZippedStorageItem(final ZipEntry entry) {
         if (entry.isDirectory()) {
-            return new ZippedStorageCollectionItem(this);
+            zippedStorageItem = new ZippedStorageCollectionItem(this);
         } else {
-            return new ZippedStorageFileItem(this, entry.getSize());
+            zippedStorageItem = new ZippedStorageFileItem(this, entry.getSize());
         }
     }
 
@@ -208,11 +252,12 @@ public class ZippedItem {
      * @throws LocalStorageException
      *             is thrown if an issue with the zip file itself occured
      */
-    private StorageItem createZippedStorageItem() throws ItemNotFoundException, LocalStorageException {
+    private void initZippedStorageItem() throws ItemNotFoundException, LocalStorageException {
         if (pathInZip.length() == 0) {
             // this ZippedItem represents the zip file itself
             // -> return a collection storage item for the zip file
-            return new ZippedStorageCollectionItem(this);
+            zippedStorageItem = new ZippedStorageCollectionItem(this);
+            return;
         }
         ZipFile zipFile = null;
         try {
@@ -225,7 +270,8 @@ public class ZippedItem {
                 final ZipEntry entry = entries.nextElement();
                 final String entryName = removeTrailingSlash(entry.getName());
                 if (pathInZip.equals(entryName)) {
-                    return createZippedStorageItem(entry);
+                    initZippedStorageItem(entry);
+                    return;
                 }
             }
         } catch (final ItemNotFoundException e) {
@@ -310,7 +356,7 @@ public class ZippedItem {
                 final ZipEntry entry = entries.nextElement();
                 if (isDirectMember(entry.getName())) {
                     StorageItem zipEntryItem;
-                    final ZippedItem zippedItem = new ZippedItem(this, entry, logger);
+                    final ZippedItem zippedItem = newZippedChildItem(this, entry, logger);
                     if (entry.isDirectory()) {
                         zipEntryItem = new ZippedStorageCollectionItem(zippedItem);
                     } else {

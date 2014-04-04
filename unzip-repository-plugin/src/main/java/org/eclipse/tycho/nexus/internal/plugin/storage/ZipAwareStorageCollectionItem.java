@@ -75,16 +75,22 @@ public class ZipAwareStorageCollectionItem extends DefaultStorageCollectionItem 
             } else if (Util.checkIfZip(member)) {
                 if (snapshotConversionResult.isPathConverted()) {
                     if (member.getPath().contains(snapshotConversionResult.getLatestVersion())) {
-                        membersToDisplay.add(new ZippedStorageCollectionItem(new ZippedItem(repository, member
-                                .getPath().replace(snapshotConversionResult.getLatestVersion(), "SNAPSHOT"), "", member
-                                .getModified(), logger)));
+                        String virtualSnapshotArtifactPath = member.getPath().replace(
+                                snapshotConversionResult.getLatestVersion(), "SNAPSHOT");
+                        membersToDisplay.add(createStorageItemForRootOfZipFile(member, virtualSnapshotArtifactPath));
                     }
                 } else {
-                    membersToDisplay.add(new ZippedStorageCollectionItem(new ZippedItem(repository, member.getPath(),
-                            "", member.getModified(), logger)));
+                    membersToDisplay.add(createStorageItemForRootOfZipFile(member, member.getPath()));
                 }
             }
         }
+
         return membersToDisplay;
+    }
+
+    private ZippedStorageCollectionItem createStorageItemForRootOfZipFile(final StorageItem member, String path)
+            throws ItemNotFoundException, LocalStorageException {
+        return new ZippedStorageCollectionItem(ZippedItem.newZippedChildItem(repository,
+                collectionStorageItem.getItemContext(), path, "", member.getModified(), logger));
     }
 }

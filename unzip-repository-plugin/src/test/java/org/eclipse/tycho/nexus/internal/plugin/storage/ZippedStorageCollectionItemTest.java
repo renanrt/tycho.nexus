@@ -26,7 +26,9 @@ import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.proxy.AccessDeniedException;
 import org.sonatype.nexus.proxy.IllegalOperationException;
 import org.sonatype.nexus.proxy.ItemNotFoundException;
+import org.sonatype.nexus.proxy.LocalStorageException;
 import org.sonatype.nexus.proxy.NoSuchResourceStoreException;
+import org.sonatype.nexus.proxy.ResourceStoreRequest;
 import org.sonatype.nexus.proxy.item.StorageItem;
 
 @SuppressWarnings("nls")
@@ -43,8 +45,7 @@ public class ZippedStorageCollectionItemTest extends UnzipPluginTestSupport {
     @Test
     public void testList() throws ItemNotFoundException, IOException, AccessDeniedException,
             NoSuchResourceStoreException, IllegalOperationException {
-        final ZippedItem zippedItem = new ZippedItem(unzipRepositoryMock, "/dir/subdir/archive.zip", "dir", 0L,
-                testLogger);
+        final ZippedItem zippedItem = createZippedItem("dir", 0L);
         final ZippedStorageCollectionItem zippedStorageCollectionItem = new ZippedStorageCollectionItem(zippedItem);
         TestUtil.assertMembers(new String[] { "/dir/subdir/archive.zip" + Util.UNZIP_TYPE_EXTENSION + "/dir/subdir" },
                 new String[] { "/dir/subdir/archive.zip" + Util.UNZIP_TYPE_EXTENSION + "/dir/test.txt" },
@@ -54,7 +55,7 @@ public class ZippedStorageCollectionItemTest extends UnzipPluginTestSupport {
     @Test
     public void testListInRoot() throws ItemNotFoundException, IOException, AccessDeniedException,
             NoSuchResourceStoreException, IllegalOperationException {
-        final ZippedItem zippedItem = new ZippedItem(unzipRepositoryMock, "/dir/subdir/archive.zip", "", 0L, testLogger);
+        final ZippedItem zippedItem = createZippedItem("", 0L);
         final ZippedStorageCollectionItem zippedStorageCollectionItem = new ZippedStorageCollectionItem(zippedItem);
         TestUtil.assertMembers(new String[] { "/dir/subdir/archive.zip" + Util.UNZIP_TYPE_EXTENSION + "/dir" },
                 new String[] { "/dir/subdir/archive.zip" + Util.UNZIP_TYPE_EXTENSION + "/test.txt" },
@@ -67,7 +68,7 @@ public class ZippedStorageCollectionItemTest extends UnzipPluginTestSupport {
         final File file = new File("./src/test/resources/" + "masterRepo" + "/dir/subdir/archive.zip");
         final long time = file.lastModified();
 
-        final ZippedItem zipItem = new ZippedItem(unzipRepositoryMock, "/dir/subdir/archive.zip", "", time, testLogger);
+        final ZippedItem zipItem = createZippedItem("", time);
         final ZippedStorageCollectionItem zipStorageCollectionItem = new ZippedStorageCollectionItem(zipItem);
         Assert.assertEquals(time, zipStorageCollectionItem.getModified());
 
@@ -77,6 +78,14 @@ public class ZippedStorageCollectionItemTest extends UnzipPluginTestSupport {
         for (final StorageItem storageItem : list) {
             Assert.assertEquals(time, storageItem.getModified());
         }
+    }
+
+    private ZippedItem createZippedItem(String pathInZip, long lastModified) throws ItemNotFoundException,
+            LocalStorageException {
+        String pathToZip = "/dir/subdir/archive.zip";
+        return ZippedItem.newZippedItem(unzipRepositoryMock,
+                new ResourceStoreRequest(pathToZip + "-unzip/" + pathInZip), pathToZip, pathInZip, lastModified,
+                testLogger);
     }
 
     @AfterClass
