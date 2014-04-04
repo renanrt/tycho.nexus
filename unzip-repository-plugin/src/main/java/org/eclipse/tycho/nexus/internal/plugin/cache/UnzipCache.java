@@ -44,9 +44,8 @@ public class UnzipCache {
      * Returns the requested artifact from the local storage if the artifact was already cached. If
      * not it retrieves it from the corresponding repository and stores it in the local storage.
      * 
-     * @param requestPath
-     *            the path to the requested artifact in the repository
-     * 
+     * @param zipItemPath
+     *            the path to the zip file
      * @return the file in the local storage
      * 
      * @throws ItemNotFoundException
@@ -55,21 +54,19 @@ public class UnzipCache {
      * @throws LocalStorageException
      * 
      */
-    public File getArchive(final String requestPath) throws ItemNotFoundException, LocalStorageException {
-        final PathLockMonitor folderLock = PathLock.getLock(getRequestPathParent(requestPath));
+    public File getArchive(final String zipItemPath) throws ItemNotFoundException, LocalStorageException {
+        final PathLockMonitor folderLock = PathLock.getLock(getRequestPathParent(zipItemPath));
         try {
             synchronized (folderLock) {
-                final ResourceStoreRequest request = new ResourceStoreRequest(requestPath);
+                final ResourceStoreRequest request = new ResourceStoreRequest(zipItemPath);
                 if (!localStorage.containsItem(repository, request)) {
-
-                    logger.debug("Caching zip file from master repository: " + requestPath);
-                    final StorageItem storageItem = retrieveItemFromMaster(requestPath);
+                    logger.debug("Caching zip file from master repository: " + zipItemPath);
+                    final StorageItem storageItem = retrieveItemFromMaster(request);
                     localStorage.storeItem(repository, storageItem);
                 }
                 final File file = ((DefaultFSLocalRepositoryStorage) localStorage).getFileFromBase(repository, request);
-                logger.debug("Accessed cached zip file: " + requestPath);
+                logger.debug("Accessed cached zip file: " + zipItemPath);
                 return file;
-
             }
         } catch (final UnsupportedStorageOperationException e) {
             throw new LocalStorageException(e);
@@ -138,11 +135,10 @@ public class UnzipCache {
         return ItemPathUtils.getParentPath(path) + ItemPathUtils.PATH_SEPARATOR;
     }
 
-    private StorageItem retrieveItemFromMaster(final String requestPath) throws ItemNotFoundException,
-            LocalStorageException {
+    private StorageItem retrieveItemFromMaster(final ResourceStoreRequest masterRepositoryRequest)
+            throws ItemNotFoundException, LocalStorageException {
         try {
-            final ResourceStoreRequest request = new ResourceStoreRequest(requestPath);
-            return repository.getMasterRepository().retrieveItem(request);
+            return repository.getMasterRepository().retrieveItem(masterRepositoryRequest);
         } catch (final IllegalOperationException e) {
             throw new LocalStorageException(e);
         } catch (final AccessDeniedException e) {

@@ -22,6 +22,8 @@ import org.junit.Test;
 import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.proxy.ItemNotFoundException;
 import org.sonatype.nexus.proxy.LocalStorageException;
+import org.sonatype.nexus.proxy.RequestContext;
+import org.sonatype.nexus.proxy.ResourceStoreRequest;
 import org.sonatype.nexus.proxy.item.DefaultStorageCollectionItem;
 import org.sonatype.nexus.proxy.item.DefaultStorageFileItem;
 import org.sonatype.nexus.util.ItemPathUtils;
@@ -145,7 +147,8 @@ public class ZippedItemTest extends UnzipPluginTestSupport {
     @Test(expected = LocalStorageException.class)
     public void testZipItemNotFound() throws Exception {
         final String pathInZip = "test.txt";
-        new ZippedItem(unzipReposMock, "/", pathInZip, 0L, LoggerFactory.getLogger(getClass()));
+        ZippedItem.newZippedItem(unzipReposMock, new ResourceStoreRequest("/-unzip/" + pathInZip), "/", pathInZip, 0L,
+                LoggerFactory.getLogger(getClass()));
     }
 
     @Test
@@ -174,8 +177,8 @@ public class ZippedItemTest extends UnzipPluginTestSupport {
     }
 
     private ZippedItem createZippedItem(final String pathInZip) throws LocalStorageException, ItemNotFoundException {
-        return new ZippedItem(unzipReposMock, pathToArchive, pathInZip, System.currentTimeMillis(),
-                LoggerFactory.getLogger(getClass()));
+        return ZippedItem.newZippedChildItem(unzipReposMock, new RequestContext(), pathToArchive, pathInZip,
+                System.currentTimeMillis(), LoggerFactory.getLogger(getClass()));
     }
 
     @AfterClass
