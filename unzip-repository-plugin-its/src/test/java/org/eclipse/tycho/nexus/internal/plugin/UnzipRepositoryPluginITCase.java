@@ -12,7 +12,10 @@ package org.eclipse.tycho.nexus.internal.plugin;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.sonatype.nexus.client.core.subsystem.content.Location.repositoryLocation;
@@ -23,12 +26,15 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.IOUtils;
+import org.eclipse.tycho.nexus.unzip.internal.jersey.UnzipVirtualRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameters;
@@ -36,6 +42,9 @@ import org.sonatype.nexus.client.core.exception.NexusClientNotFoundException;
 import org.sonatype.nexus.client.core.subsystem.artifact.ResolveRequest;
 import org.sonatype.nexus.client.core.subsystem.artifact.ResolveResponse;
 import org.sonatype.nexus.client.core.subsystem.content.Location;
+import org.sonatype.nexus.client.core.subsystem.repository.Repositories;
+import org.sonatype.nexus.client.core.subsystem.repository.Repository;
+import org.sonatype.nexus.client.core.subsystem.repository.maven.MavenHostedRepository;
 import org.sonatype.nexus.testsuite.support.NexusStartAndStopStrategy;
 import org.sonatype.nexus.testsuite.support.NexusStartAndStopStrategy.Strategy;
 
@@ -156,6 +165,44 @@ public class UnzipRepositoryPluginITCase extends AbstractUnzipRepositoryPluginIT
                 getTestData(EXAMPLE_SNAPSHOT_JAR, "artifacts/snapshots/"),
                 getFileFromZipInRepo("snapshots.unzip", EXAMPLE_PATH_PREFIX + "SNAPSHOT/" + EXAMPLE_ARTIFACTID
                         + "-SNAPSHOT.jar"));
+    }
+
+    @Test
+    public void testCreateChangeStatusAndRemoveUnzipRepositoryAfterNexusStarted() throws Exception {
+        final String hostedRepositoryId = "hostedRepository";
+        final MavenHostedRepository hostedRepository = repositories().create(MavenHostedRepository.class,
+                hostedRepositoryId).save();
+
+        final String unzipRepositoryId = "hostedRepository.unzip";
+        final UnzipVirtualRepository unzipRepository = repositories()
+                .create(UnzipVirtualRepository.class, unzipRepositoryId).ofRepository(hostedRepositoryId).save();
+
+        assertTrue(unzipRepository.status().isInService());
+        assertFalse(unzipRepository.putOutOfService().status().isInService());
+        assertTrue(unzipRepository.putInService().status().isInService());
+
+        assertThat(getAllRepositoryIds(), hasItem(hostedRepositoryId));
+        assertThat(getAllRepositoryIds(), hasItem(unzipRepositoryId));
+
+        unzipRepository.remove();
+        hostedRepository.remove();
+
+        assertThat(getAllRepositoryIds(), not(hasItem(hostedRepositoryId)));
+        assertThat(getAllRepositoryIds(), not(hasItem(unzipRepositoryId)));
+    }
+
+    @SuppressWarnings("rawtypes")
+    private Set<String> getAllRepositoryIds() {
+        final Collection<Repository> allRepositories = repositories().get();
+        final Set<String> allRepositoryIds = new HashSet<String>();
+        for (final Repository repository : allRepositories) {
+            allRepositoryIds.add(repository.id());
+        }
+        return allRepositoryIds;
+    }
+
+    private Repositories repositories() {
+        return client().getSubsystem(Repositories.class);
     }
 
     private String getTestData(String localArtifactPath, String testDataPrefix) throws ZipException, IOException {

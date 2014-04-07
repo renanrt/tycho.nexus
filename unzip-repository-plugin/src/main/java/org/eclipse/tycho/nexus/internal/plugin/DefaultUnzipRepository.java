@@ -22,6 +22,8 @@ import org.eclipse.tycho.nexus.internal.plugin.cache.UnzipCache;
 import org.eclipse.tycho.nexus.internal.plugin.storage.Util;
 import org.eclipse.tycho.nexus.internal.plugin.storage.ZipAwareStorageCollectionItem;
 import org.eclipse.tycho.nexus.internal.plugin.storage.ZippedItem;
+import org.sonatype.nexus.ApplicationStatusSource;
+import org.sonatype.nexus.SystemState;
 import org.sonatype.nexus.configuration.Configurator;
 import org.sonatype.nexus.configuration.model.CRepository;
 import org.sonatype.nexus.configuration.model.CRepositoryExternalConfigurationHolderFactory;
@@ -83,13 +85,36 @@ public class DefaultUnzipRepository extends AbstractShadowRepository implements 
     @Requirement(hint = "maven2")
     private ContentClass masterContentClass;
 
+    @Requirement
+    private ApplicationStatusSource statusSource;
+
     private RepositoryKind repositoryKind;
-
-    private boolean isNexusStarted = false;
-
+    private UnzipCache cache;
+    private boolean processedNexusStartedEvent = false;
     private boolean isMasterAvailable = false;
 
-    private UnzipCache cache;
+    // If a class instance of DefaultUnzipRepository is created before Nexus startup finished the field statusSource gets
+    // and keeps an invalid proxy instance from plexus which always throws an IllegalStateException if being asked
+    // for the current Nexus state. All these instances get the NexusStartedEvent and with it set the MasterRepository
+    // from what is stored in the ExternalConfiguration.
+    // This is true for all unzip repositories being listed in the nexus.xml file on startup.
+    //
+    // If a class instance of DefaultUnzipRepository is created e.g. from the UI after Nexus startup finished it
+    // won't ever get a NexusStartedEvent so for these DefaultUnzipRepository instances the field 
+    // processedNexusStartedEvent will always be false. But the field statusSource is now valid and we can ask for the 
+    // correct state.
+    private boolean isNexusStarted() {
+        if (processedNexusStartedEvent) {
+            return true;
+        }
+
+        try {
+            final SystemState systemState = statusSource.getSystemStatus().getState();
+            return systemState.equals(SystemState.STARTED);
+        } catch (final IllegalStateException e) {
+        }
+        return false;
+    }
 
     @Override
     protected Configurator getConfigurator() {
@@ -145,7 +170,7 @@ public class DefaultUnzipRepository extends AbstractShadowRepository implements 
             super.setMasterRepository(repository);
             isMasterAvailable = true;
         } catch (final NoSuchRepositoryException e) {
-            if (isNexusStarted) {
+            if (isNexusStarted()) {
                 throw e;
             } else {
                 // NoSuchRepositoryException yet. Just remember the id
@@ -164,7 +189,7 @@ public class DefaultUnzipRepository extends AbstractShadowRepository implements 
     // see comment at setMasterRepositoryId(String id)
     @Override
     public Repository getMasterRepository() {
-        if (isNexusStarted && isMasterAvailable) {
+        if (isNexusStarted() && isMasterAvailable) {
             return super.getMasterRepository();
         }
         return null;
@@ -174,15 +199,18 @@ public class DefaultUnzipRepository extends AbstractShadowRepository implements 
     // see comment at setMasterRepositoryId(String id)
     @Override
     public LocalStatus getLocalStatus() {
-        if (isNexusStarted && isMasterAvailable) {
-            return super.getLocalStatus();
+        LocalStatus localStatus = null;
+        if (isNexusStarted() && isMasterAvailable) {
+            localStatus = super.getLocalStatus();
         } else {
-            String localStatus = getCurrentConfiguration(false).getLocalStatus();
-            if (localStatus == null) {
-                return LocalStatus.OUT_OF_SERVICE;
+            final String localStatusString = getCurrentConfiguration(false).getLocalStatus();
+            if (localStatusString == null) {
+                localStatus = LocalStatus.OUT_OF_SERVICE;
+            } else {
+                localStatus = LocalStatus.valueOf(localStatusString);
             }
-            return LocalStatus.valueOf(localStatus);
         }
+        return localStatus;
     }
 
     @Subscribe
@@ -190,8 +218,6 @@ public class DefaultUnzipRepository extends AbstractShadowRepository implements 
         if (!isMasterAvailable) {
             String repositoryId = getExternalConfiguration(false).getMasterRepositoryId();
             try {
-                getLogger().debug(
-                        "setting master repository '" + repositoryId + "' for unzip repository '" + getId() + "'");
                 setMasterRepositoryId(repositoryId);
             } catch (NoSuchRepositoryException e) {
                 getLogger().error("[" + repositoryId + "] " + "cannot set master repository " + e.getMessage());
@@ -200,14 +226,15 @@ public class DefaultUnzipRepository extends AbstractShadowRepository implements 
                 getLogger().error("[" + repositoryId + "] " + "cannot set master repository " + e.getMessage());
             }
         }
-        isNexusStarted = true;
+        processedNexusStartedEvent = true;
     }
 
     @Subscribe
     public void onRepositoryRegistryEventAdd(RepositoryRegistryEventAdd evt) {
-        if (getMasterRepository() != null && evt.getRepository().getId().equals(getMasterRepository().getId())) {
+        final String eventRepositoryId = evt.getRepository().getId();
+        if (super.getMasterRepository() != null && eventRepositoryId.equals(super.getMasterRepository().getId())) {
             try {
-                setMasterRepositoryId(evt.getRepository().getId());
+                setMasterRepositoryId(eventRepositoryId);
             } catch (final NoSuchRepositoryException e) {
                 getLogger().warn("Master Repository not available", e);
             } catch (final IncompatibleMasterRepositoryException e) {
