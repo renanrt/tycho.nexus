@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 SAP AG and others.
+ * Copyright (c) 2010, 2014 SAP AG and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -97,7 +97,7 @@ public class ZippedItem {
      * @param repository
      *            the repository in which the zipped item is accessed (the unzip repository)
      * @param parentContext
-     *            the context for the request of the parent item being listed
+     *            the context of the request to the parent item being listed
      * @param zipItemPath
      *            the path to the zip file
      * @param pathInZip
@@ -147,10 +147,6 @@ public class ZippedItem {
         return request;
     }
 
-    private static String removeTrailingSlash(final String path) {
-        return (path.endsWith("/") ? path.substring(0, path.length() - 1) : path);
-    }
-
     private ZippedItem(final DefaultUnzipRepository repository, final ResourceStoreRequest request,
             final String zipItemPath, final String pathInZip, final long lastModified, final Logger logger) {
         this.repository = repository;
@@ -165,6 +161,10 @@ public class ZippedItem {
         } else {
             this.pathInZip = "";
         }
+    }
+
+    private static String removeTrailingSlash(final String path) {
+        return (path.endsWith("/") ? path.substring(0, path.length() - 1) : path);
     }
 
     /**

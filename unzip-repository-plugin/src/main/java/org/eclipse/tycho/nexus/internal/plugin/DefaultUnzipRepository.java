@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 SAP AG and others.
+ * Copyright (c) 2010, 2014 SAP AG and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -244,24 +244,24 @@ public class DefaultUnzipRepository extends AbstractShadowRepository implements 
     }
 
     /**
-     * Retrieves an item from the master repository. The method includes some workaround logic to
-     * access folders (some folders are only accessible if the request URL end with a double slash).
-     * In addition this method also finds file items if the request URL ends with a slash.
+     * Retrieves an item from the master repository.
      * 
+     * @param requestPath
+     *            the path to the item be retrieved from the master repository
      * @param originalRequest
-     *            the request that defines which item be retrieved
-     * @param conversionResult
+     *            the original request to the virtual repository providing context information the
+     *            request to the master repository
      * @return the item from the master repository
      * @throws ItemNotFoundException
      *             is thrown if there is no item under the specified request path in the master
      *             repository
      * @throws LocalStorageException
      */
-    StorageItem retrieveItemFromMaster(final ResourceStoreRequest originalRequest, ConversionResult conversionResult)
+    StorageItem retrieveItemFromMaster(String requestPath, ResourceStoreRequest originalRequest)
             throws ItemNotFoundException, LocalStorageException {
         try {
             // use original request with modified path (e.g. like in AbstractMavenRepository.doRetrieveArtifactItem)
-            originalRequest.pushRequestPath(conversionResult.getConvertedPath());
+            originalRequest.pushRequestPath(requestPath);
             try {
                 return doRetrieveItemFromMaster(originalRequest);
             } finally {
@@ -304,7 +304,7 @@ public class DefaultUnzipRepository extends AbstractShadowRepository implements 
 
         // check if item exists in master repository
         // this call will fail with ItemNotFoundException if the item does not exist in the master repository
-        final StorageItem masterItem = retrieveItemFromMaster(request, conversionResult);
+        final StorageItem masterItem = retrieveItemFromMaster(conversionResult.getConvertedPath(), request);
 
         if (masterItem instanceof StorageCollectionItem) {
             // item is non-zip folder
@@ -328,6 +328,8 @@ public class DefaultUnzipRepository extends AbstractShadowRepository implements 
      * @param conversionResult
      *            the result of the snapshot path conversion, containing the converted path
      * @param request
+     *            the {@link ResourceStoreRequest} for the item. The request is included in the
+     *            {@link StorageItem} returned by the repository.
      * @return item that represents a file or folder within a zip file, <code>null</code> if the
      *         requested path does not point to zip content
      * @throws LocalStorageException
