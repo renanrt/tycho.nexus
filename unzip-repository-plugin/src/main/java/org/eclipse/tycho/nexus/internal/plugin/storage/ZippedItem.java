@@ -13,7 +13,6 @@ package org.eclipse.tycho.nexus.internal.plugin.storage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URLConnection;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
@@ -225,11 +224,10 @@ public class ZippedItem {
      *         directory
      */
     public String getMimeType() {
-        if (!isDirectory()) {
-            return URLConnection.guessContentTypeFromName(pathInZip);
-        } else {
+        if (isDirectory()) {
             return null;
         }
+        return MimeTypeHelper.guessMimeType(pathInZip);
     }
 
     private void initZippedStorageItem(final ZipEntry entry) {
