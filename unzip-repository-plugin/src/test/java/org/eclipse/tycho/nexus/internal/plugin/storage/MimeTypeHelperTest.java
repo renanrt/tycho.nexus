@@ -29,6 +29,7 @@ public class MimeTypeHelperTest {
         assertEquals("application/javascript", MimeTypeHelper.guessMimeType("test/foo.js"));
         assertEquals("text/plain", MimeTypeHelper.guessMimeType("test/foo.properties"));
         assertEquals("application/json", MimeTypeHelper.guessMimeType("test/test.json"));
+        assertEquals("application/zip", MimeTypeHelper.guessMimeType("test/test.jar"));
     }
 
     @Test

@@ -25,6 +25,7 @@ public class MimeTypeHelper {
         result.put("json", "application/json");
         result.put("css", "text/css");
         result.put("less", "text/css");
+        result.put("jar", "application/zip");
         return result;
     }
 
